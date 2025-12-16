@@ -1,0 +1,30 @@
+<div class="register-container">
+  <h2>Create Account</h2>
+
+  <div *ngIf="errorMessage()" style="color: red; margin-bottom: 10px">
+    {{ errorMessage() }}
+  </div>
+
+  <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+    <div>
+      <label>Username:</label>
+      <input type="text" formControlName="username" placeholder="Enter username" />
+    </div>
+
+    <div>
+      <label>Email:</label>
+      <input type="email" formControlName="email" placeholder="Enter email" />
+    </div>
+
+    <div>
+      <label>Password:</label>
+      <input type="password" formControlName="password" placeholder="Enter password" />
+    </div>
+
+    <button type="submit" [disabled]="registerForm.invalid || isLoading()">
+      {{ isLoading() ? 'Creating...' : 'Register' }}
+    </button>
+  </form>
+
+  <p>Already have an account? <a routerLink="/login">Login here</a></p>
+</div>

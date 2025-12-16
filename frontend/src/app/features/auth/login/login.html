@@ -1,0 +1,25 @@
+<div class="login-container">
+  <h2>Welcome Back</h2>
+
+  <div *ngIf="errorMessage()" style="color: red; margin-bottom: 10px">
+    {{ errorMessage() }}
+  </div>
+
+  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <div>
+      <label>Email:</label>
+      <input type="email" formControlName="email" placeholder="Enter email" />
+    </div>
+
+    <div>
+      <label>Password:</label>
+      <input type="password" formControlName="password" placeholder="Enter password" />
+    </div>
+
+    <button type="submit" [disabled]="loginForm.invalid || isLoading()">
+      {{ isLoading() ? 'Logging in...' : 'Login' }}
+    </button>
+  </form>
+
+  <p>Don't have an account? <a routerLink="/register">Register here</a></p>
+</div>
