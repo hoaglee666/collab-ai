@@ -84,4 +84,13 @@ export class ProjectService {
       this.getHeaders()
     );
   }
+
+  updateProject(id: string, data: FormData | any): Observable<any> {
+    // If it's FormData, Angular handles headers. If JSON, it handles that too.
+    return this.http.put(`${this.apiUrl}/${id}`, data, {
+      headers: new HttpHeaders({
+        Authorization: `Bearer ${this.authService.getToken()}`,
+      }),
+    });
+  }
 }

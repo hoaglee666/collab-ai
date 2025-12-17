@@ -1,11 +1,12 @@
 // frontend/src/app/features/project-detail/project-detail.component.ts
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms'; // <--- Import FormsModule for the input
 import { ProjectService } from '../../core/services/project';
 import { AuthService } from '../../core/services/auth';
 import { Router } from '@angular/router';
+import { SocketService } from '../../core/services/socket';
 
 @Component({
   selector: 'app-project-detail',
@@ -19,20 +20,59 @@ export class ProjectDetailComponent implements OnInit {
   private projectService = inject(ProjectService);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private socketService = inject(SocketService);
 
+  selectedFile: File | null = null; //track image
   project = signal<any>(null);
   tasks = signal<any[]>([]); // <--- New: Store the list of tasks
   isLoading = signal(true);
   newTaskDescription = ''; // <--- New: To hold the input text
   isAiLoading = signal(false);
   isOwner = signal(false);
+  isEditing = signal(false); //toggle
+
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
+    }
+  }
+
+  progress = computed(() => {
+    const total = this.tasks().length;
+    if (total === 0) return 0;
+    const completed = this.tasks().filter((t) => t.isCompleted).length;
+    return Math.round((completed / total) * 100);
+  });
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.loadProject(id);
-      this.loadTasks(id); // <--- Load tasks when page opens
+      this.loadTasks(id);
+
+      // 1. Join Real-time Room
+      this.socketService.joinProject(id);
+
+      // 2. Listen: New Task Created (by someone else)
+      this.socketService.onTaskCreated().subscribe((newTask) => {
+        // Only add if it's not already in the list (to prevent duplicates if we added it locally)
+        this.tasks.update((list) => {
+          const exists = list.find((t) => t.id === newTask.id);
+          return exists ? list : [...list, newTask];
+        });
+      });
+
+      // 3. Listen: Task Updated (checkbox toggled)
+      this.socketService.onTaskUpdated().subscribe((updatedTask) => {
+        this.tasks.update((list) => list.map((t) => (t.id === updatedTask.id ? updatedTask : t)));
+      });
     }
+  }
+
+  ngOnDestroy() {
+    // Good practice: disconnect when leaving the page
+    this.socketService.disconnect();
   }
 
   loadProject(id: string) {
@@ -127,5 +167,49 @@ export class ProjectDetailComponent implements OnInit {
         this.tasks.update((list) => [...list, newTask]);
       },
     });
+  }
+
+  //save change
+  saveProject() {
+    const p = this.project();
+    // In a real app, use a Form. Here we just read the bound values directly.
+    // We will bind inputs to the project signal in HTML (a bit hacky but fast)
+    // OR we can send the current values from the UI inputs.
+
+    // Better way: Let's assume the HTML updates the project() signal or we use local variables.
+    // For simplicity, we will grab the values from the inputs in the template using "template reference variables"
+    // or just bind ngModel if we want to add FormsModule.
+
+    // Let's rely on the updated description/name in the HTML inputs
+    // We will pass the new values in the method arguments from HTML for cleanliness.
+  }
+
+  // Revised Save Method (We will call this from HTML with new values)
+  confirmUpdate(newName: string, newDesc: string) {
+    const formData = new FormData();
+    formData.append('name', newName);
+    formData.append('description', newDesc);
+
+    // Only append image if the user picked a new one
+    if (this.selectedFile) {
+      formData.append('image', this.selectedFile);
+    }
+
+    this.projectService.updateProject(this.project().id, formData).subscribe({
+      next: (res) => {
+        // Update local state
+        this.project.set({ ...this.project(), ...res.project });
+        this.isEditing.set(false);
+        this.selectedFile = null; // Reset file
+        alert('Project updated!');
+      },
+      error: () => alert('Update failed'),
+    });
+  }
+
+  //toglg edit
+  toggleEdit() {
+    this.isEditing.update((v) => !v);
+    this.selectedFile = null; // Reset if they cancel
   }
 }
