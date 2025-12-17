@@ -5,6 +5,7 @@ import {
   getProjects,
   getProjectById,
   getMyProjects,
+  deleteProject,
 } from "../controllers/project.controller.js";
 import { verifyToken } from "../middleware/auth.middleware.js"; // <--- Secure it!
 import multer from "multer";
@@ -26,4 +27,5 @@ router.post("/", verifyToken, upload.single("image"), createProject);
 router.get("/", verifyToken, getProjects);
 router.get("/my", verifyToken, getMyProjects);
 router.get("/:id", verifyToken, getProjectById);
+router.delete("/:id", verifyToken, deleteProject);
 export default router;

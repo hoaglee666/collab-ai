@@ -49,4 +49,16 @@ export class AuthService {
 
     return this.http.delete('http://localhost:3000/api/auth', { headers });
   }
+
+  getCurrentUserId(): string | null {
+    const token = this.getToken();
+    if (!token) return null;
+    try {
+      //decode middle part of paylod
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.id;
+    } catch (e) {
+      return null;
+    }
+  }
 }

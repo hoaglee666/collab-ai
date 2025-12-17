@@ -19,9 +19,13 @@
         />
         }
 
-        <div>
-          <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-300">{{ project().name }}</h1>
-          <div class="flex items-center gap-2 mt-2 text-gray-500 text-sm">
+        <div class="">
+          <h1
+            class="text-5xl flex justify-between items-start font-bold text-gray-900 dark:text-gray-300"
+          >
+            {{ project().name }}
+          </h1>
+          <div class="flex justify-between items-start gap-2 my-4 text-gray-500 text-sm">
             <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded font-bold text-xs">
               {{ project().status | uppercase }}
             </span>
@@ -34,6 +38,14 @@
             >
             <span>•</span>
             <span class="dark:text-gray-300">{{ project().createdAt | date : 'mediumDate' }}</span>
+            @if (isOwner()) {
+            <button
+              (click)="deleteProject()"
+              class="px-2 py-1 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition font-medium text-sm flex items-center gap-2"
+            >
+              🗑️ Delete
+            </button>
+            }
           </div>
           <p class="mt-4 text-gray-700 dark:text-gray-300 text-lg leading-relaxed max-w-2xl">
             {{ project().description }}

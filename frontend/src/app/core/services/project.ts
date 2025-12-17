@@ -39,6 +39,10 @@ export class ProjectService {
     });
   }
 
+  deleteProject(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${id}`, this.getHeaders());
+  }
+
   // Add this method inside your ProjectService class
   generateDescription(projectName: string): Observable<{ suggestion: string }> {
     return this.http.post<{ suggestion: string }>(

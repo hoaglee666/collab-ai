@@ -81,3 +81,22 @@ export const getProjectById = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+export const deleteProject = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const project = await Project.findOne({ where: { id, userId } });
+    if (!project) {
+      return res
+        .status(404)
+        .json({ message: "Project not found or unauthorized" });
+    }
+    await project.destroy(); //delete project and tasks
+    res.json({ message: "Project deleted successfully" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error deleting project", error: error.message });
+  }
+};

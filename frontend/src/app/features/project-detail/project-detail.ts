@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms'; // <--- Import FormsModule for the input
 import { ProjectService } from '../../core/services/project';
+import { AuthService } from '../../core/services/auth';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-project-detail',
@@ -15,12 +17,15 @@ import { ProjectService } from '../../core/services/project';
 export class ProjectDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private projectService = inject(ProjectService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
   project = signal<any>(null);
   tasks = signal<any[]>([]); // <--- New: Store the list of tasks
   isLoading = signal(true);
   newTaskDescription = ''; // <--- New: To hold the input text
   isAiLoading = signal(false);
+  isOwner = signal(false);
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -34,9 +39,23 @@ export class ProjectDetailComponent implements OnInit {
     this.projectService.getProjectById(id).subscribe({
       next: (data) => {
         this.project.set(data);
+        // Check if the project's userId matches my ID
+        const myId = this.authService.getCurrentUserId(); // We need to create this helper!
+        this.isOwner.set(data.userId === myId);
         this.isLoading.set(false);
       },
       error: (err) => console.error(err),
+    });
+  }
+
+  deleteProject() {
+    if (!confirm('Are you sure you want to delete this project?')) return;
+    this.projectService.deleteProject(this.project().id).subscribe({
+      next: () => {
+        alert('Project deleted.');
+        this.router.navigate(['/dashboard']);
+      },
+      error: () => alert('Could not delete project.'),
     });
   }
 
