@@ -49,7 +49,11 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // Socket.io Logic
 io.on("connection", (socket) => {
   console.log("⚡A user connected:", socket.id);
-
+  // Join a "Room" based on Project ID
+  socket.on("joinProject", (projectId) => {
+    socket.join(projectId);
+    console.log(`🚪User joined project room: ${projectId}`);
+  });
   socket.on("disconnect", () => {
     console.log("🔌User disconnected:", socket.id);
   });

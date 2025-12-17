@@ -100,3 +100,35 @@ export const deleteProject = async (req, res) => {
       .json({ message: "Error deleting project", error: error.message });
   }
 };
+
+export const updateProject = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const { name, description, status } = req.body;
+
+    const project = await Project.findOne({ where: { id, userId } });
+
+    if (!project) {
+      return res
+        .status(404)
+        .json({ message: "Project not found or unauthorized" });
+    }
+
+    // Update text fields
+    if (name) project.name = name;
+    if (description) project.description = description;
+    if (status) project.status = status;
+
+    // NEW: Update Image if a file was uploaded
+    if (req.file) {
+      project.imageUrl = `/uploads/${req.file.filename}`;
+    }
+
+    await project.save();
+
+    res.json({ message: "Project updated", project });
+  } catch (error) {
+    res.status(500).json({ message: "Update failed", error: error.message });
+  }
+};

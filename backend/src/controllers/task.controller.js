@@ -10,6 +10,8 @@ export const createTask = async (req, res) => {
       projectId,
       description,
     });
+    //emit
+    req.io.to(projectId).emit("task:created", task);
 
     res.status(201).json(task);
   } catch (error) {
@@ -24,12 +26,14 @@ export const toggleTask = async (req, res) => {
   try {
     const { id } = req.params;
     const task = await Task.findByPk(id);
-
     if (!task) return res.status(404).json({ message: "Task not found" });
 
-    // Flip the boolean
     task.isCompleted = !task.isCompleted;
     await task.save();
+
+    // 🔥 EMIT EVENT
+    // We send the whole task so UI can update the status
+    req.io.to(task.projectId).emit("task:updated", task);
 
     res.json(task);
   } catch (error) {
