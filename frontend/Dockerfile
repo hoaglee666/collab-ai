@@ -1,21 +1,15 @@
-# frontend/Dockerfile
-
-# Stage 1: Build the Angular App
+# Stage 1: Build
 FROM node:20-alpine as build
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-# Build for production
 RUN npm run build
 
-# Stage 2: Serve with Nginx
+# Stage 2: Serve
 FROM nginx:alpine
-# Copy built files from Stage 1 to Nginx folder
-# Note: 'frontend' below matches your angular.json project name. 
-# If your folder inside dist/ is different, update this line!
+# IMPORTANT: Check if your angular.json "outputPath" matches this folder name!
+# It is usually dist/frontend/browser or dist/your-app-name/browser
 COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
-
-# Expose port 80 (Standard Web Port)
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

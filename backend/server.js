@@ -7,11 +7,13 @@ import { Server } from "socket.io"; // <--- Import Socket.io
 import sequelize from "./src/config/database.js";
 import User from "./src/models/user.model.js";
 import Project from "./src/models/project.model.js";
+import Task from "./src/models/task.model.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import authRoutes from "./src/routes/auth.routes.js";
 import projectRoutes from "./src/routes/project.routes.js";
 import aiRoutes from "./src/routes/ai.routes.js";
+import taskRoutes from "./src/routes/task.routes.js";
 
 dotenv.config();
 
@@ -41,6 +43,7 @@ app.use((req, res, next) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/tasks", taskRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Socket.io Logic

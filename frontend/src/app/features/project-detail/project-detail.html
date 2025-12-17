@@ -45,9 +45,69 @@
   </header>
 
   <main class="flex-1 max-w-5xl mx-auto w-full p-6">
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-      <h3 class="text-xl font-bold text-gray-400 mb-2">Tasks Container</h3>
-      <p class="text-gray-400">Todo list functionality coming soon...</p>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-xl font-bold text-gray-800">✅ Project Tasks</h3>
+        <span class="text-sm text-gray-500">{{ tasks().length }} items</span>
+        <button
+          (click)="generateAiTasks()"
+          [disabled]="isAiLoading()"
+          class="px-3 py-1 bg-purple-100 text-purple-700 rounded-md text-sm font-bold hover:bg-purple-200 transition flex items-center gap-2"
+        >
+          <span>{{ isAiLoading() ? '🔮 Thinking...' : '✨ AI Auto-Plan' }}</span>
+        </button>
+      </div>
+
+      <div class="flex gap-2 mb-8">
+        <input
+          type="text"
+          [(ngModel)]="newTaskDescription"
+          (keyup.enter)="addTask()"
+          placeholder="Add a new task..."
+          class="flex-1 rounded-lg border-gray-300 border px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none transition bg-gray-50"
+        />
+        <button
+          (click)="addTask()"
+          class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition shadow-md"
+        >
+          + Add
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        @if (tasks().length === 0) {
+        <p class="text-center text-gray-400 py-8">No tasks yet. Add one above!</p>
+        }
+
+        <div
+          *ngFor="let task of tasks()"
+          class="flex items-center gap-4 p-4 rounded-lg border border-gray-100 hover:bg-gray-50 transition group bg-white"
+        >
+          <div
+            (click)="toggleTask(task)"
+            class="w-6 h-6 rounded border-2 cursor-pointer flex items-center justify-center transition-colors duration-200"
+            [class.bg-green-500]="task.isCompleted"
+            [class.border-green-500]="task.isCompleted"
+            [class.border-gray-300]="!task.isCompleted"
+          >
+            <span *ngIf="task.isCompleted" class="text-white text-sm font-bold">✓</span>
+          </div>
+
+          <span
+            class="text-gray-700 flex-1 text-lg"
+            [class.line-through]="task.isCompleted"
+            [class.text-gray-400]="task.isCompleted"
+          >
+            {{ task.description }}
+          </span>
+
+          <button
+            class="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
     </div>
   </main>
 </div>

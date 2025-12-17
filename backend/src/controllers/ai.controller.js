@@ -26,3 +26,39 @@ export const generateDescription = async (req, res) => {
     res.status(500).json({ message: "Failed to generate AI content" });
   }
 };
+
+// backend/src/controllers/ai.controller.js
+
+// ... existing generateDescription ...
+
+export const generateTasks = async (req, res) => {
+  try {
+    const { description } = req.body;
+
+    if (!description) {
+      return res
+        .status(400)
+        .json({ message: "Project description is required" });
+    }
+
+    // Prompt for the AI
+    const prompt = `Based on this project description: "${description}", generate 5 short, actionable technical tasks. Return ONLY a JSON array of strings, like ["Task 1", "Task 2"]. Do not add markdown formatting.`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    let text = response.text();
+
+    // Clean up if AI adds markdown code blocks (```json ... ```)
+    text = text
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+
+    const tasks = JSON.parse(text); // Convert string to real Array
+
+    res.json({ tasks });
+  } catch (error) {
+    console.error("AI Error:", error);
+    res.status(500).json({ message: "Failed to generate tasks" });
+  }
+};

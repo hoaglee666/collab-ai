@@ -47,4 +47,33 @@ export class ProjectService {
   getProjectById(id: string): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/${id}`, this.getHeaders());
   }
+
+  //get task
+  getTasks(projectId: string): Observable<any[]> {
+    return this.http.get<any[]>(`http://localhost:3000/api/tasks/${projectId}`, this.getHeaders());
+  }
+  //add task
+  createTask(projectId: string, description: string): Observable<any> {
+    return this.http.post<any>(
+      `http://localhost:3000/api/tasks`,
+      { projectId, description },
+      this.getHeaders()
+    );
+  }
+  //check uncheck
+  toggleTask(taskId: string): Observable<any> {
+    return this.http.patch<any>(
+      `http://localhost:3000/api/tasks/${taskId}/toggle`,
+      {},
+      this.getHeaders()
+    );
+  }
+
+  getAiTasks(description: string): Observable<{ tasks: string[] }> {
+    return this.http.post<{ tasks: string[] }>(
+      'http://localhost:3000/api/ai/suggest-tasks',
+      { description },
+      this.getHeaders()
+    );
+  }
 }
