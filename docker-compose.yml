@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  # 1. Database (PostgreSQL)
+  postgres:
+    image: postgres:16-alpine
+    container_name: collab_ai_db
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: collab_ai_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # 2. Backend (Node.js)
+  backend:
+    build: ./backend
+    container_name: collab_ai_backend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      DB_HOST: postgres # Matches the service name above
+      DB_USER: admin
+      DB_PASS: password123
+      DB_NAME: collab_ai_db
+      DB_DIALECT: postgres
+      JWT_SECRET: super_secret_secure_key_2025
+      GEMINI_API_KEY: ${GEMINI_API_KEY} # Reads from your local computer
+    depends_on:
+      - postgres
+
+  # 3. Frontend (Angular + Nginx)
+  frontend:
+    build: ./frontend
+    container_name: collab_ai_frontend
+    restart: always
+    ports:
+      - "80:80" # We will access the app at localhost (no :4200)
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

@@ -1,0 +1,53 @@
+<div class="min-h-screen bg-gray-50 flex flex-col">
+  <header class="bg-white shadow-sm p-6">
+    <div class="max-w-5xl mx-auto">
+      <a
+        routerLink="/dashboard"
+        class="text-blue-600 hover:text-blue-800 font-medium mb-4 inline-block transition"
+      >
+        &larr; Back to Dashboard
+      </a>
+
+      @if (isLoading()) {
+      <div class="animate-pulse h-8 w-64 bg-gray-200 rounded"></div>
+      } @else if (project()) {
+      <div class="flex flex-col md:flex-row gap-6 items-start">
+        @if (project().imageUrl) {
+        <img
+          [src]="'http://localhost:3000' + project().imageUrl"
+          class="w-full md:w-64 h-40 object-cover rounded-lg shadow-md border border-gray-200"
+        />
+        }
+
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">{{ project().name }}</h1>
+          <div class="flex items-center gap-2 mt-2 text-gray-500 text-sm">
+            <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded font-bold text-xs">
+              {{ project().status | uppercase }}
+            </span>
+            <span>•</span>
+            <span
+              >Created by
+              <span class="font-semibold text-gray-700">{{ project().User?.username }}</span></span
+            >
+            <span>•</span>
+            <span>{{ project().createdAt | date : 'mediumDate' }}</span>
+          </div>
+          <p class="mt-4 text-gray-700 text-lg leading-relaxed max-w-2xl">
+            {{ project().description }}
+          </p>
+        </div>
+      </div>
+      } @else {
+      <p class="text-red-500">Project not found.</p>
+      }
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-5xl mx-auto w-full p-6">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+      <h3 class="text-xl font-bold text-gray-400 mb-2">Tasks Container</h3>
+      <p class="text-gray-400">Todo list functionality coming soon...</p>
+    </div>
+  </main>
+</div>
