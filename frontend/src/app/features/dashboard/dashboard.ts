@@ -6,11 +6,12 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ProjectService } from '../../core/services/project';
 import { io, Socket } from 'socket.io-client';
+import { SidebarComponent } from '../../shared/components/sidebar/sidebar';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, SidebarComponent],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })

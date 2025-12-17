@@ -5,11 +5,12 @@ import { AuthService } from '../../core/services/auth';
 import { CommonModule } from '@angular/common';
 import { ThemeService } from '../../core/services/theme';
 import { Router } from '@angular/router';
+import { SidebarComponent } from '../../shared/components/sidebar/sidebar';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, SidebarComponent],
   templateUrl: './settings.html',
   styleUrl: './settings.scss',
 })

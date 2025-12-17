@@ -1,0 +1,40 @@
+<aside class="w-64 bg-slate-900 text-white flex flex-col shadow-xl h-screen">
+  <div class="p-6 text-2xl font-bold tracking-wider text-center border-b border-slate-700">
+    <a routerLink="/dashboard">Collab<span class="text-blue-400">AI</span></a>
+  </div>
+
+  <nav class="flex-1 px-4 py-6 space-y-2">
+    <a
+      routerLink="/dashboard"
+      routerLinkActive="bg-blue-600 text-white shadow-md scale-105"
+      class="block px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800 hover:text-white transition transform"
+    >
+      🚀 Dashboard
+    </a>
+
+    <a
+      routerLink="/community"
+      routerLinkActive="bg-blue-600 text-white shadow-md scale-105"
+      class="block px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800 hover:text-white transition transform"
+    >
+      🌏 Community
+    </a>
+
+    <a
+      routerLink="/settings"
+      routerLinkActive="bg-blue-600 text-white shadow-md scale-105"
+      class="block px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800 hover:text-white transition transform"
+    >
+      ⚙️ Settings
+    </a>
+  </nav>
+
+  <div class="p-4 border-t border-slate-700">
+    <button
+      (click)="logout()"
+      class="w-full py-2 px-4 bg-red-500 hover:bg-red-600 rounded-lg text-sm font-semibold transition flex items-center justify-center gap-2"
+    >
+      <span>Log Out</span>
+    </button>
+  </div>
+</aside>
