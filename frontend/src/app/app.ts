@@ -1,6 +1,7 @@
 // frontend/src/app/app.ts
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router'; // <--- Import this
+import { ThemeService } from './core/services/theme';
 
 @Component({
   selector: 'app-root',
@@ -10,4 +11,5 @@ import { RouterOutlet } from '@angular/router'; // <--- Import this
 })
 export class AppComponent {
   // We don't need the test logic anymore!
+  constructor(private themeService: ThemeService) {}
 }

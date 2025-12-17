@@ -4,6 +4,7 @@ import {
   createProject,
   getProjects,
   getProjectById,
+  getMyProjects,
 } from "../controllers/project.controller.js";
 import { verifyToken } from "../middleware/auth.middleware.js"; // <--- Secure it!
 import multer from "multer";
@@ -23,5 +24,6 @@ const upload = multer({ storage });
 // Apply verifyToken so only logged-in users can hit these routes
 router.post("/", verifyToken, upload.single("image"), createProject);
 router.get("/", verifyToken, getProjects);
+router.get("/my", verifyToken, getMyProjects);
 router.get("/:id", verifyToken, getProjectById);
 export default router;

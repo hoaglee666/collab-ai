@@ -33,23 +33,31 @@ export const createProject = async (req, res) => {
   }
 };
 
-//get all projects
+//get all projects (public community)
 export const getProjects = async (req, res) => {
   try {
-    //const userId = req.user.id;
-    //const projects = await Project.findAll({ where: { userId } });
     const projects = await Project.findAll({
-      order: [["createdAt", "DESC"]], // Show newest first
-      include: {
-        model: User,
-        attributes: ["username"], // Fetch the creator's name too!
-      },
+      order: [["createdAt", "DESC"]],
+      include: { model: User, attributes: ["username"] },
     });
     res.json(projects);
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error fetching projects", error: error.message });
+    res.status(500).json({ message: "Error fetching projects" });
+  }
+};
+
+//get mine
+export const getMyProjects = async (req, res) => {
+  try {
+    const userId = req.user.id; // From Token
+    const projects = await Project.findAll({
+      where: { userId }, // <--- FILTER BY USER
+      order: [["createdAt", "DESC"]],
+      include: { model: User, attributes: ["username"] },
+    });
+    res.json(projects);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching my projects" });
   }
 };
 

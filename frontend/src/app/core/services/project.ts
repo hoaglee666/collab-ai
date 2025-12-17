@@ -26,6 +26,10 @@ export class ProjectService {
     return this.http.get<any[]>(this.apiUrl, this.getHeaders());
   }
 
+  getMyProjects(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/my`, this.getHeaders());
+  }
+
   createProject(projectData: FormData): Observable<any> {
     return this.http.post<any>(this.apiUrl, projectData, {
       headers: new HttpHeaders({

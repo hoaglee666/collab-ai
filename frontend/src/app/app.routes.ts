@@ -6,6 +6,7 @@ import { authGuard } from './core/guards/auth-guard';
 import { DashboardComponent } from './features/dashboard/dashboard';
 import { ProjectDetailComponent } from './features/project-detail/project-detail';
 import { SettingsComponent } from './features/settings/settings';
+import { CommunityComponent } from './features/community/community';
 
 export const routes: Routes = [
   { path: 'register', component: RegisterComponent },
@@ -20,6 +21,7 @@ export const routes: Routes = [
     component: ProjectDetailComponent,
     canActivate: [authGuard],
   },
+  { path: 'community', component: CommunityComponent, canActivate: [authGuard] },
   { path: 'settings', component: SettingsComponent, canActivate: [authGuard] },
   { path: '', redirectTo: 'register', pathMatch: 'full' }, // Default to register for now
 ];

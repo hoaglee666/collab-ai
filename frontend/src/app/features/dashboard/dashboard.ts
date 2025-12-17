@@ -56,8 +56,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   loadProjects() {
-    this.projectService.getProjects().subscribe({
-      next: (data) => this.projects.set(data),
+    this.projectService.getMyProjects().subscribe({
+      // Was getProjects()
+      next: (data) => {
+        this.projects.set(data);
+        this.isLoading.set(false);
+      },
       error: (err) => console.error('Failed to load projects', err),
     });
   }
