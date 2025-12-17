@@ -61,4 +61,26 @@ export class AuthService {
       return null;
     }
   }
+
+  getProfile(): Observable<any> {
+    const token = this.getToken();
+    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+    // We can reuse the same endpoint if we change the backend to support GET,
+    // OR just use a simple trick: The 'verifyToken' middleware attaches the user to req.user.
+    // Let's create a quick new route in Backend for this?
+    // ACTUALLY: Let's just use the '/api/auth/profile' endpoint but make sure Backend has a GET for it.
+
+    return this.http.get('http://localhost:3000/api/auth/profile', { headers });
+  }
+  //helper uplaod
+  uploadAvatar(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    const token = this.getToken();
+    // Don't set Content-Type manually for files
+    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+
+    return this.http.post('http://localhost:3000/api/auth/avatar', formData, { headers });
+  }
 }

@@ -99,3 +99,30 @@ export const deleteAccount = async (req, res) => {
     res.status(500).json({ message: "Delete failed", error: error.message });
   }
 };
+
+export const uploadAvatar = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Multer saves the file, we just need the filename
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const avatarUrl = `/uploads/${req.file.filename}`;
+
+    // Update the user
+    const user = await User.findByPk(userId);
+    user.avatarUrl = avatarUrl;
+    await user.save();
+
+    res.json({ message: "Avatar updated", avatarUrl });
+  } catch (error) {
+    res.status(500).json({ message: "Upload failed", error: error.message });
+  }
+};
+
+export const getProfile = async (req, res) => {
+  const user = await User.findByPk(req.user.id);
+  res.json(user);
+};

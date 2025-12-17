@@ -1,0 +1,21 @@
+<header
+  class="bg-white dark:bg-slate-800 dark:border-slate-700 shadow-sm p-6 flex justify-between items-center sticky top-0 z-10 transition-colors duration-300"
+>
+  <div>
+    <h1 class="text-2xl font-bold text-gray-800 dark:text-white">{{ title }}</h1>
+    <p class="text-gray-500 dark:text-gray-400 text-sm">{{ subtitle }}</p>
+  </div>
+
+  <a
+    routerLink="/profile"
+    class="h-10 w-10 rounded-full bg-blue-100 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 flex items-center justify-center overflow-hidden cursor-pointer hover:ring-2 hover:ring-blue-500 transition"
+  >
+    @if (user()?.avatarUrl) {
+    <img [src]="'http://localhost:3000' + user().avatarUrl" class="w-full h-full object-cover" />
+    } @else {
+    <span class="text-blue-600 dark:text-blue-400 font-bold">
+      {{ user()?.username?.charAt(0) | uppercase }}
+    </span>
+    }
+  </a>
+</header>

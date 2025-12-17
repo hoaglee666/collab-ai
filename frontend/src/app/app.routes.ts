@@ -7,6 +7,7 @@ import { DashboardComponent } from './features/dashboard/dashboard';
 import { ProjectDetailComponent } from './features/project-detail/project-detail';
 import { SettingsComponent } from './features/settings/settings';
 import { CommunityComponent } from './features/community/community';
+import { ProfileComponent } from './features/profile/profile';
 
 export const routes: Routes = [
   { path: 'register', component: RegisterComponent },
@@ -19,6 +20,11 @@ export const routes: Routes = [
   {
     path: 'projects/:id', //:id dynamic
     component: ProjectDetailComponent,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'profile',
+    component: ProfileComponent,
     canActivate: [authGuard],
   },
   { path: 'community', component: CommunityComponent, canActivate: [authGuard] },
