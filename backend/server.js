@@ -9,6 +9,8 @@ import User from "./src/models/user.model.js";
 import Project from "./src/models/project.model.js";
 import Task from "./src/models/task.model.js";
 import path from "path";
+import passport from "passport";
+import "./src/config/passport.js";
 import { fileURLToPath } from "url";
 import authRoutes from "./src/routes/auth.routes.js";
 import projectRoutes from "./src/routes/project.routes.js";

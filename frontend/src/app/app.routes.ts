@@ -8,10 +8,12 @@ import { ProjectDetailComponent } from './features/project-detail/project-detail
 import { SettingsComponent } from './features/settings/settings';
 import { CommunityComponent } from './features/community/community';
 import { ProfileComponent } from './features/profile/profile';
+import { LoginSuccessComponent } from './features/login-success/login-success';
 
 export const routes: Routes = [
   { path: 'register', component: RegisterComponent },
   { path: 'login', component: LoginComponent },
+  { path: 'login-success', component: LoginSuccessComponent },
   {
     path: 'dashboard',
     component: DashboardComponent,
