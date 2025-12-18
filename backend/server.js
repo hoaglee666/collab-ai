@@ -14,6 +14,8 @@ import authRoutes from "./src/routes/auth.routes.js";
 import projectRoutes from "./src/routes/project.routes.js";
 import aiRoutes from "./src/routes/ai.routes.js";
 import taskRoutes from "./src/routes/task.routes.js";
+import Message from "./src/models/message.model.js";
+import chatRoutes from "./src/routes/chat.routes.js";
 
 dotenv.config();
 
@@ -44,6 +46,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/tasks", taskRoutes);
+app.use("/api/chat", chatRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Socket.io Logic

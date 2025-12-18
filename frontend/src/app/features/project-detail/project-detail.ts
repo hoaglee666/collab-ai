@@ -7,6 +7,7 @@ import { ProjectService } from '../../core/services/project';
 import { AuthService } from '../../core/services/auth';
 import { Router } from '@angular/router';
 import { SocketService } from '../../core/services/socket';
+import { ChatService } from '../../core/services/chat';
 
 @Component({
   selector: 'app-project-detail',
@@ -21,6 +22,7 @@ export class ProjectDetailComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   private socketService = inject(SocketService);
+  private chatService = inject(ChatService);
 
   selectedFile: File | null = null; //track image
   project = signal<any>(null);
@@ -30,6 +32,9 @@ export class ProjectDetailComponent implements OnInit {
   isAiLoading = signal(false);
   isOwner = signal(false);
   isEditing = signal(false); //toggle
+  myId = '';
+  messages = signal<any[]>([]);
+  newMessage = '';
 
   onFileSelected(event: any) {
     const file = event.target.files[0];
@@ -47,6 +52,10 @@ export class ProjectDetailComponent implements OnInit {
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
+    const currentUser = this.authService.getCurrentUserId();
+    if (currentUser) {
+      this.myId = currentUser;
+    }
     if (id) {
       this.loadProject(id);
       this.loadTasks(id);
@@ -67,7 +76,31 @@ export class ProjectDetailComponent implements OnInit {
       this.socketService.onTaskUpdated().subscribe((updatedTask) => {
         this.tasks.update((list) => list.map((t) => (t.id === updatedTask.id ? updatedTask : t)));
       });
+
+      //load chat history
+      this.chatService.getMessages(id).subscribe((msgs) => this.messages.set(msgs));
+      //listen for realtime mes
+      this.socketService.onMessageReceived().subscribe((msg) => {
+        this.messages.update((old) => [...old, msg]);
+        this.scrollToBottom();
+      });
     }
+  }
+
+  //send mess
+  sendMessage() {
+    if (!this.newMessage.trim()) return;
+    //api
+    this.chatService.sendMessage(this.project().id, this.newMessage).subscribe(() => {
+      this.newMessage = ''; //clear input
+    });
+  }
+
+  scrollToBottom() {
+    setTimeout(() => {
+      const container = document.getElementById('chat-container');
+      if (container) container.scrollTop = container.scrollHeight;
+    }, 100);
   }
 
   ngOnDestroy() {

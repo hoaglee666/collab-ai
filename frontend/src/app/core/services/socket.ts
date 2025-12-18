@@ -36,6 +36,14 @@ export class SocketService {
     });
   }
 
+  onMessageReceived(): Observable<any> {
+    return new Observable((observer) => {
+      this.socket.on('message:sent', (msg) => {
+        observer.next(msg);
+      });
+    });
+  }
+
   disconnect() {
     if (this.socket) {
       this.socket.disconnect();
