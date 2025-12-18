@@ -20,6 +20,10 @@ const Project = sequelize.define("Project", {
     type: DataTypes.STRING,
     allowNull: true,
   },
+  deadline: {
+    type: DataTypes.DATEONLY, //y-m-d
+    allowNull: true,
+  },
   status: {
     type: DataTypes.ENUM("active", "completed", "archived"),
     defaultValue: "active",

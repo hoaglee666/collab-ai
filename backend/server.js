@@ -18,6 +18,8 @@ import aiRoutes from "./src/routes/ai.routes.js";
 import taskRoutes from "./src/routes/task.routes.js";
 import Message from "./src/models/message.model.js";
 import chatRoutes from "./src/routes/chat.routes.js";
+import Notification from "./src/models/notification.model.js";
+import notificationRoutes from "./src/routes/notification.routes.js";
 
 dotenv.config();
 
@@ -50,7 +52,7 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
+app.use("/api/notifications", notificationRoutes);
 // Socket.io Logic
 io.on("connection", (socket) => {
   console.log("⚡A user connected:", socket.id);
@@ -59,6 +61,12 @@ io.on("connection", (socket) => {
     socket.join(projectId);
     console.log(`🚪User joined project room: ${projectId}`);
   });
+  //join personal room
+  socket.on("joinUser", (userId) => {
+    socket.join(`user:${userId}`);
+    console.log(`User joined personal room: user:${userId}`);
+  });
+
   socket.on("disconnect", () => {
     console.log("🔌User disconnected:", socket.id);
   });

@@ -5,7 +5,7 @@ import { Op } from "sequelize";
 //create project
 export const createProject = async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, description, deadline } = req.body;
     const userId = req.user.id;
 
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
@@ -14,6 +14,7 @@ export const createProject = async (req, res) => {
       description,
       userId,
       imageUrl,
+      deadline,
     });
 
     // req.io.emit('project:created', project);
@@ -141,7 +142,7 @@ export const updateProject = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
-    const { name, description, status } = req.body;
+    const { name, description, status, deadline } = req.body;
 
     const project = await Project.findOne({ where: { id, userId } });
 
@@ -155,6 +156,7 @@ export const updateProject = async (req, res) => {
     if (name) project.name = name;
     if (description) project.description = description;
     if (status) project.status = status;
+    if (deadline) project.deadline = deadline;
 
     // NEW: Update Image if a file was uploaded
     if (req.file) {

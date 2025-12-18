@@ -1,5 +1,15 @@
 // frontend/src/app/features/project-detail/project-detail.component.ts
-import { Component, inject, OnInit, signal, computed, OnDestroy } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  signal,
+  computed,
+  OnDestroy,
+  ViewChild,
+  ElementRef,
+  AfterViewChecked,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
@@ -22,7 +32,7 @@ import { ChatService } from '../../core/services/chat';
   templateUrl: './project-detail.html',
   styleUrl: './project-detail.scss',
 })
-export class ProjectDetailComponent implements OnInit, OnDestroy {
+export class ProjectDetailComponent implements OnInit, OnDestroy, AfterViewChecked {
   private route = inject(ActivatedRoute);
   private projectService = inject(ProjectService);
   private authService = inject(AuthService);
@@ -30,6 +40,9 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
   private socketService = inject(SocketService);
   private chatService = inject(ChatService);
   private fb = inject(FormBuilder);
+
+  @ViewChild('chatContainer') chatContainer!: ElementRef;
+  shouldScroll = false;
 
   selectedFile: File | null = null; //track image
   project = signal<any>(null);
@@ -56,6 +69,20 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     if (total === 0) return 0;
     const completed = this.tasks().filter((t) => t.isCompleted).length;
     return Math.round((completed / total) * 100);
+  });
+
+  daysLeft = computed(() => {
+    const deadline = this.project()?.deadline;
+    if (!deadline) return null;
+
+    const today = new Date();
+    const due = new Date(deadline);
+
+    //cal diff in time
+    const diffTime = due.getTime() - today.getTime();
+    //convert to days
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
   });
 
   ngOnInit() {
@@ -86,7 +113,22 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
       });
 
       //load chat history
-      this.chatService.getMessages(id).subscribe((msgs) => this.messages.set(msgs));
+      // 2. Load Messages & Handle Auto-Scroll
+      this.chatService.getMessages(id).subscribe((msgs) => {
+        this.messages.set(msgs);
+        this.scrollToBottom();
+
+        // ✨ CHECK URL PARAMETER
+        // We check this AFTER messages are loaded so there is content to scroll to
+        this.route.queryParams.subscribe((params) => {
+          if (params['jump'] === 'chat') {
+            // Small timeout to allow DOM to render the messages first
+            setTimeout(() => {
+              this.scrollToBottom();
+            }, 300);
+          }
+        });
+      });
       //listen for realtime mes
       this.socketService.onMessageReceived().subscribe((msg) => {
         this.messages.update((old) => [...old, msg]);
@@ -110,10 +152,15 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
   }
 
   scrollToBottom() {
-    setTimeout(() => {
-      const container = document.getElementById('chat-container');
-      if (container) container.scrollTop = container.scrollHeight;
-    }, 100);
+    this.shouldScroll = true;
+  }
+
+  ngAfterViewChecked() {
+    if (this.shouldScroll && this.chatContainer) {
+      const el = this.chatContainer.nativeElement;
+      el.scrollTop = el.scrollHeight;
+      this.shouldScroll = false;
+    }
   }
 
   ngOnDestroy() {
@@ -234,11 +281,12 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
   confirmUpdate() {
     if (this.editForm.invalid) return;
 
-    const { name, description } = this.editForm.value;
+    const { name, description, deadline } = this.editForm.value;
     const formData = new FormData();
     formData.append('name', name);
     formData.append('description', description);
 
+    if (deadline) formData.append('deadline', deadline);
     if (this.selectedFile) {
       formData.append('image', this.selectedFile);
     }
@@ -260,9 +308,10 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
 
     // If we are ENTERING edit mode, fill the form with current data
     if (this.isEditing()) {
-      this.editForm.patchValue({
-        name: this.project().name,
-        description: this.project().description,
+      this.editForm = this.fb.group({
+        name: [this.project().name, Validators.required],
+        description: [this.project().description],
+        deadline: [this.project().deadline], // <--- Pre-fill date
       });
     } else {
       // If cancelling, reset file selection

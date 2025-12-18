@@ -5,17 +5,79 @@
     <h1 class="text-2xl font-bold text-gray-800 dark:text-white">{{ title }}</h1>
     <p class="text-gray-500 dark:text-gray-400 text-sm">{{ subtitle }}</p>
   </div>
+  <div class="flex items-center gap-2">
+    <div class="relative">
+      <button
+        (click)="toggleDropdown()"
+        class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition text-gray-500 dark:text-gray-300 relative"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+          ></path>
+        </svg>
+        @if (unreadCount() > 0) {
+        <span
+          class="absolute top-1 right-1 h-3 w-3 bg-red-500 rounded-full border-2 border-white dark:border-slate-800 animate-pulse"
+        ></span>
+        }
+      </button>
+      @if (showDropdown()) {
+      <div
+        class="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-100 dark:border-slate-700 overflow-hidden z-50 animate-fade-in"
+      >
+        <div
+          class="p-3 border-b border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-900"
+        >
+          <h3 class="text-sm font-bold text-gray-700 dark:text-gray-300">Notifications</h3>
+        </div>
 
-  <a
-    routerLink="/profile"
-    class="h-10 w-10 rounded-full bg-blue-100 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 flex items-center justify-center overflow-hidden cursor-pointer hover:ring-2 hover:ring-blue-500 transition"
-  >
-    @if (user()?.avatarUrl) {
-    <img [src]="'http://localhost:3000' + user().avatarUrl" class="w-full h-full object-cover" />
-    } @else {
-    <span class="text-blue-600 dark:text-blue-400 font-bold">
-      {{ user()?.username?.charAt(0) | uppercase }}
-    </span>
-    }
-  </a>
+        <div class="max-h-80 overflow-y-auto">
+          @if (notifications().length === 0) {
+          <div class="p-4 text-center text-gray-400 text-sm">No new notifications.</div>
+          }
+
+          <div
+            *ngFor="let notif of notifications()"
+            (click)="handleNotificationClick(notif)"
+            [routerLink]="notif.link"
+            class="p-3 border-b border-gray-50 dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-slate-700 transition cursor-pointer flex gap-3 items-start"
+            [class.bg-blue-50]="!notif.isRead"
+          >
+            <div class="mt-1">
+              <span *ngIf="notif.type === 'message'" class="text-lg">💬</span>
+              <span *ngIf="notif.type === 'system'" class="text-lg">📢</span>
+            </div>
+
+            <div>
+              <p class="text-sm text-gray-800 dark:text-gray-200" [class.font-bold]="!notif.isRead">
+                {{ notif.message }}
+              </p>
+              <p class="text-[10px] text-gray-400 mt-1">
+                {{ notif.createdAt | date : 'shortTime' }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      } @if (showDropdown()) {
+      <div (click)="showDropdown.set(false)" class="fixed inset-0 z-40 cursor-default"></div>
+      }
+    </div>
+    <a
+      routerLink="/profile"
+      class="h-10 w-10 rounded-full bg-blue-100 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 flex items-center justify-center overflow-hidden cursor-pointer hover:ring-2 hover:ring-blue-500 transition"
+    >
+      @if (user()?.avatarUrl) {
+      <img [src]="'http://localhost:3000' + user().avatarUrl" class="w-full h-full object-cover" />
+      } @else {
+      <span class="text-blue-600 dark:text-blue-400 font-bold">
+        {{ user()?.username?.charAt(0) | uppercase }}
+      </span>
+      }
+    </a>
+  </div>
 </header>

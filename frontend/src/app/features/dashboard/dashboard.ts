@@ -32,6 +32,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   projectForm = this.fb.group({
     name: ['', Validators.required],
     description: [''],
+    deadline: [''],
   });
 
   ngOnInit() {
@@ -85,6 +86,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const formData = new FormData();
     formData.append('name', this.projectForm.get('name')?.value || '');
     formData.append('description', this.projectForm.get('description')?.value || '');
+
+    const deadline = this.projectForm.get('deadline')?.value;
+    if (deadline) {
+      formData.append('deadline', deadline);
+    }
 
     if (this.selectedFile) {
       formData.append('image', this.selectedFile); // 'image' matches upload.single('image') in backend

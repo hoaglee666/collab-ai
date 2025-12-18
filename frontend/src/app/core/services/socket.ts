@@ -18,6 +18,10 @@ export class SocketService {
     this.socket.emit('joinProject', projectId);
   }
 
+  joinUser(userId: string) {
+    this.socket.emit('joinUser', userId);
+  }
+
   // Listen for new tasks
   onTaskCreated(): Observable<any> {
     return new Observable((observer) => {
@@ -40,6 +44,14 @@ export class SocketService {
     return new Observable((observer) => {
       this.socket.on('message:sent', (msg) => {
         observer.next(msg);
+      });
+    });
+  }
+
+  onNotification(): Observable<any> {
+    return new Observable((observer) => {
+      this.socket.on('notification:new', (notif) => {
+        observer.next(notif);
       });
     });
   }
