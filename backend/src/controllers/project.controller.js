@@ -1,5 +1,6 @@
 import Project from "../models/project.model.js";
 import User from "../models/user.model.js";
+import { Op } from "sequelize";
 
 //create project
 export const createProject = async (req, res) => {
@@ -36,12 +37,47 @@ export const createProject = async (req, res) => {
 //get all projects (public community)
 export const getProjects = async (req, res) => {
   try {
-    const projects = await Project.findAll({
-      order: [["createdAt", "DESC"]],
-      include: { model: User, attributes: ["username"] },
+    // 1. Read Query Params (with defaults)
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 6; // 6 items per page
+    const search = req.query.search || "";
+    const sortBy = req.query.sortBy || "createdAt";
+    const order = req.query.order || "DESC";
+
+    // 2. Calculate Offset (Skip)
+    const offset = (page - 1) * limit;
+
+    // 3. Build Search Condition
+    const searchCondition = search
+      ? {
+          [Op.or]: [
+            { name: { [Op.iLike]: `%${search}%` } }, // Case-insensitive search
+            { description: { [Op.iLike]: `%${search}%` } },
+          ],
+        }
+      : {};
+
+    // 4. Fetch Data + Total Count (findAndCountAll is magic!)
+    const { count, rows } = await Project.findAndCountAll({
+      where: searchCondition,
+      include: {
+        model: User,
+        attributes: ["username", "avatarUrl"], // Include avatar for UI
+      },
+      order: [[sortBy, order]],
+      limit: limit,
+      offset: offset,
     });
-    res.json(projects);
+
+    // 5. Return Data + Pagination Info
+    res.json({
+      projects: rows,
+      totalItems: count,
+      totalPages: Math.ceil(count / limit),
+      currentPage: page,
+    });
   } catch (error) {
+    console.error(error); // Log for debugging
     res.status(500).json({ message: "Error fetching projects" });
   }
 };
@@ -53,7 +89,7 @@ export const getMyProjects = async (req, res) => {
     const projects = await Project.findAll({
       where: { userId }, // <--- FILTER BY USER
       order: [["createdAt", "DESC"]],
-      include: { model: User, attributes: ["username"] },
+      include: { model: User, attributes: ["username", "avatarUrl"] },
     });
     res.json(projects);
   } catch (error) {

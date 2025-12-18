@@ -22,8 +22,17 @@ export class ProjectService {
     };
   }
 
-  getProjects(): Observable<any[]> {
-    return this.http.get<any[]>(this.apiUrl, this.getHeaders());
+  getProjects(params: {
+    page: number;
+    limit: number;
+    search: string;
+    sortBy: string;
+    order: string;
+  }): Observable<any> {
+    // Construct Query String manually or use HttpParams
+    const query = `?page=${params.page}&limit=${params.limit}&search=${params.search}&sortBy=${params.sortBy}&order=${params.order}`;
+
+    return this.http.get<any>(this.apiUrl + query, this.getHeaders());
   }
 
   getMyProjects(): Observable<any[]> {

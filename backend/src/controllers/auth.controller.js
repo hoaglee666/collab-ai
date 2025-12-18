@@ -25,34 +25,48 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    //find user by email
+
     const user = await User.findOne({ where: { email } });
+
     if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(404).json({ message: "User not found" });
     }
-    //check pass
+
+    // --- 🛡️ SAFETY CHECK FOR OAUTH USERS ---
+    if (!user.password) {
+      return res.status(400).json({
+        message:
+          "This account uses Google/GitHub login. Please use the buttons above.",
+      });
+    }
+    // ----------------------------------------
+
     const isMatch = await bcrypt.compare(password, user.password);
+
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
-    //gen token
+
+    // ... Generate Token and respond ...
     const token = jwt.sign(
-      { id: user.id, role: user.role },
+      { id: user.id, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: "1d" }
+      {
+        expiresIn: "24h",
+      }
     );
+
     res.json({
-      message: "Login successfuly",
       token,
       user: {
         id: user.id,
         username: user.username,
         email: user.email,
-        role: user.role,
+        avatarUrl: user.avatarUrl,
       },
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ message: "Login failed", error: error.message });
   }
 };
 

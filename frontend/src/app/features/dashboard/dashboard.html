@@ -2,13 +2,12 @@
   <app-sidebar></app-sidebar>
   <main class="flex-1 overflow-y-auto">
     <app-header title="Overview" subtitle="Welcome back to your workspace"></app-header>
-
     <div class="p-8 max-w-7xl mx-auto">
       <div
-        class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-gray-100 dark:border-slate-700 p-6 mb-8 transition hover:shadow-xl"
+        class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-gray-100 dark:border-slate-700 px-6 pb-3 pt-1 mb-5 transition hover:shadow-xl"
       >
         <h2
-          class="text-xl font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-slate-700 pb-2"
+          class="text-xl font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-slate-700 py-2"
         >
           Create New Project
         </h2>
@@ -16,7 +15,7 @@
         <form [formGroup]="projectForm" (ngSubmit)="createProject()" class="space-y-4">
           <div class="flex gap-3">
             <div class="flex-1">
-              <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1"
+              <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 pb-3"
                 >Project Name</label
               >
               <input
@@ -40,7 +39,7 @@
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1"
+            <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 pb-3"
               >Description</label
             >
             <textarea
@@ -51,7 +50,7 @@
             ></textarea>
           </div>
 
-          <div class="flex justify-between items-center pt-2">
+          <div class="flex justify-between items-center pt-0">
             <input
               type="file"
               #fileInput
@@ -115,9 +114,17 @@
             </h4>
             <div class="flex items-center gap-2 mb-3">
               <div
-                class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold"
+                class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold overflow-hidden border border-gray-200 dark:border-slate-600"
               >
-                {{ project.User?.username?.charAt(0) | uppercase }}
+                <img
+                  *ngIf="project.User?.avatarUrl"
+                  [src]="'http://localhost:3000' + project.User.avatarUrl"
+                  class="w-full h-full object-cover"
+                />
+
+                <span *ngIf="!project.User?.avatarUrl">
+                  {{ project.User?.username?.charAt(0) | uppercase }}
+                </span>
               </div>
               <span class="text-xs text-gray-500 dark:text-gray-400"
                 >by {{ project.User?.username }}</span

@@ -1,8 +1,14 @@
 // frontend/src/app/features/project-detail/project-detail.component.ts
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, signal, computed, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { FormsModule } from '@angular/forms'; // <--- Import FormsModule for the input
+import {
+  FormsModule,
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms'; // <--- Import FormsModule for the input
 import { ProjectService } from '../../core/services/project';
 import { AuthService } from '../../core/services/auth';
 import { Router } from '@angular/router';
@@ -12,17 +18,18 @@ import { ChatService } from '../../core/services/chat';
 @Component({
   selector: 'app-project-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule], // <--- Add FormsModule here
+  imports: [CommonModule, RouterLink, FormsModule, ReactiveFormsModule], // <--- Add FormsModule here
   templateUrl: './project-detail.html',
   styleUrl: './project-detail.scss',
 })
-export class ProjectDetailComponent implements OnInit {
+export class ProjectDetailComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private projectService = inject(ProjectService);
   private authService = inject(AuthService);
   private router = inject(Router);
   private socketService = inject(SocketService);
   private chatService = inject(ChatService);
+  private fb = inject(FormBuilder);
 
   selectedFile: File | null = null; //track image
   project = signal<any>(null);
@@ -35,6 +42,7 @@ export class ProjectDetailComponent implements OnInit {
   myId = '';
   messages = signal<any[]>([]);
   newMessage = '';
+  editForm!: FormGroup;
 
   onFileSelected(event: any) {
     const file = event.target.files[0];
@@ -83,6 +91,11 @@ export class ProjectDetailComponent implements OnInit {
       this.socketService.onMessageReceived().subscribe((msg) => {
         this.messages.update((old) => [...old, msg]);
         this.scrollToBottom();
+      });
+      //init empty form
+      this.editForm = this.fb.group({
+        name: ['', Validators.required],
+        description: [''],
       });
     }
   }
@@ -218,22 +231,23 @@ export class ProjectDetailComponent implements OnInit {
   }
 
   // Revised Save Method (We will call this from HTML with new values)
-  confirmUpdate(newName: string, newDesc: string) {
-    const formData = new FormData();
-    formData.append('name', newName);
-    formData.append('description', newDesc);
+  confirmUpdate() {
+    if (this.editForm.invalid) return;
 
-    // Only append image if the user picked a new one
+    const { name, description } = this.editForm.value;
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('description', description);
+
     if (this.selectedFile) {
       formData.append('image', this.selectedFile);
     }
 
     this.projectService.updateProject(this.project().id, formData).subscribe({
       next: (res) => {
-        // Update local state
         this.project.set({ ...this.project(), ...res.project });
         this.isEditing.set(false);
-        this.selectedFile = null; // Reset file
+        this.selectedFile = null;
         alert('Project updated!');
       },
       error: () => alert('Update failed'),
@@ -243,6 +257,16 @@ export class ProjectDetailComponent implements OnInit {
   //toglg edit
   toggleEdit() {
     this.isEditing.update((v) => !v);
-    this.selectedFile = null; // Reset if they cancel
+
+    // If we are ENTERING edit mode, fill the form with current data
+    if (this.isEditing()) {
+      this.editForm.patchValue({
+        name: this.project().name,
+        description: this.project().description,
+      });
+    } else {
+      // If cancelling, reset file selection
+      this.selectedFile = null;
+    }
   }
 }
