@@ -80,9 +80,9 @@
               >
                 {{ project().status }}
               </span>
-              @if (daysLeft() !== null) {
+              @if (daysLeft() !== null && project().status === 'active') {
               <span
-                class="px-2 py-1 text-xs font-bold rounded uppercase tracking-wide flex items-center gap-1"
+                class="px-2 py-1 mt-2 text-xs font-bold rounded uppercase tracking-wide border"
                 [ngClass]="{
                   'bg-red-100 text-red-700': daysLeft()! <= 3,
                   'bg-yellow-100 text-yellow-700': daysLeft()! > 3 && daysLeft()! <= 7,
@@ -313,8 +313,7 @@
           </div>
 
           <div
-            #chatContainer
-            id="chat-container"
+            #scrollContainer
             class="flex-1 overflow-y-auto min-h-0 p-4 space-y-4 bg-gray-50 dark:bg-slate-900 scrollbar-thin"
           >
             @if (messages().length === 0) {

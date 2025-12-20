@@ -41,7 +41,6 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
   private chatService = inject(ChatService);
   private fb = inject(FormBuilder);
 
-  @ViewChild('chatContainer') chatContainer!: ElementRef;
   selectedFile: File | null = null; //track image
   project = signal<any>(null);
   tasks = signal<any[]>([]); // <--- New: Store the list of tasks
@@ -54,6 +53,8 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
   messages = signal<any[]>([]);
   newMessage = '';
   editForm!: FormGroup;
+
+  @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
 
   onFileSelected(event: any) {
     const file = event.target.files[0];
@@ -289,13 +290,10 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
   }
 
   scrollToBottom() {
-    // Using setTimeout(..., 100) pushes this action to the end of the browser's "To Do" list.
-    // This guarantees that Angular has finished painting the *ngFor rows
-    // and the browser has calculated the new correct height.
     setTimeout(() => {
-      if (this.chatContainer) {
-        const el = this.chatContainer.nativeElement;
-        el.scrollTop = el.scrollHeight; // Jump to the absolute bottom
+      if (this.scrollContainer) {
+        this.scrollContainer.nativeElement.scrollTop =
+          this.scrollContainer.nativeElement.scrollHeight;
       }
     }, 100);
   }
