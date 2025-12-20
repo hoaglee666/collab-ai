@@ -1,6 +1,8 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
 import Project from "../models/project.model.js";
+import Task from "../models/task.model.js";
+
 dotenv.config();
 
 //init gemini
@@ -68,5 +70,66 @@ export const generateTasks = async (req, res) => {
   } catch (error) {
     console.error("AI Error:", error);
     res.status(500).json({ message: "Failed to generate tasks" });
+  }
+};
+
+export const chatWithAdvisor = async (req, res) => {
+  try {
+    const { message } = req.body;
+    const userId = req.user.id;
+
+    //fetch user real context
+    const projects = await Project.findAll({
+      where: { userId },
+      include: [{ model: Task }], //get task to cal progres
+    });
+
+    //summar data for ai, turn db ojbect to string
+    const projectSummary = projects
+      .map((p) => {
+        const totalTasks = p.Tasks.length;
+        const completedTasks = p.Tasks.filter((t) => t.isCompleted).length;
+        const progress =
+          totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+        return `>Project: "${p.name}"
+      >Status: ${p.status}
+      >Deadline: ${p.deadline || "No deadline"}
+      >Progress: ${progress}% (${completedTasks}/${totalTasks} tasks)
+      >Description: ${p.description || "N/A"}`;
+      })
+      .join("\n");
+
+    //system prompt
+    const systemPrompt = `
+      You are an expert Project Management Advisor named "CollabBot".
+      You are talking to the user about their specific projects.
+      
+      HERE IS THE USER'S CURRENT DATA:
+      ${projectSummary}
+
+      USER'S QUESTION: "${message}"
+
+      INSTRUCTIONS:
+      - Use the provided data to give specific advice.
+      - If they ask "What should I do?", look for projects with close deadlines or low progress.
+      - Be encouraging but practical.
+      - Keep answers concise (under 100 words if possible).
+      - If they have no projects, tell them to create one.
+      `;
+
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+
+    const result = await model.generateContent(systemPrompt);
+    const response = await result.response;
+    const text = response.text();
+
+    res.json({ reply: text });
+  } catch (error) {
+    console.error("AI error:", error);
+    res
+      .status(500)
+      .json({ message: "AI advisor is offline bud.", error: error.message });
   }
 };
