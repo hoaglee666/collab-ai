@@ -70,9 +70,16 @@
             <div class="flex items-center gap-3 mb-2">
               <h1 class="text-4xl font-bold text-gray-900 dark:text-white">{{ project().name }}</h1>
               <span
-                class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded uppercase tracking-wide"
-                >{{ project().status }}</span
+                class="px-2 py-1 mt-2 text-xs font-bold rounded uppercase tracking-wide border"
+                [ngClass]="{
+                  'bg-green-100 text-green-700 border-green-200': project().status === 'active',
+                  'bg-blue-100 text-blue-700 border-blue-200': project().status === 'completed',
+                  'bg-gray-100 text-gray-600 border-gray-200': project().status === 'archived',
+                  'bg-red-100 text-red-700 border-red-200': project().status === 'abandoned'
+                }"
               >
+                {{ project().status }}
+              </span>
               @if (daysLeft() !== null) {
               <span
                 class="px-2 py-1 text-xs font-bold rounded uppercase tracking-wide flex items-center gap-1"
@@ -114,6 +121,18 @@
                 formControlName="name"
                 class="w-full text-xl font-bold p-2 rounded border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
               />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
+              <select
+                formControlName="status"
+                class="w-full p-2 rounded border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white outline-none cursor-pointer"
+              >
+                <option value="active">🟢 Active</option>
+                <option value="completed">🔵 Completed</option>
+                <option value="archived">📦 Archived</option>
+                <option value="abandoned">🔴 Abandoned</option>
+              </select>
             </div>
             <div>
               <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Deadline</label>
@@ -186,7 +205,7 @@
                 >
                 <button
                   (click)="generateAiTasks()"
-                  [disabled]="isAiLoading()"
+                  [disabled]="isAiLoading() || isReadOnly()"
                   class="px-3 py-1 bg-purple-100 text-purple-700 rounded-md text-sm font-bold hover:bg-purple-200 transition flex items-center gap-2"
                 >
                   <span>{{ isAiLoading() ? '🔮 Thinking...' : '✨ AI Auto-Plan' }}</span>
@@ -199,11 +218,13 @@
                 type="text"
                 [(ngModel)]="newTaskDescription"
                 (keyup.enter)="addTask()"
+                [disabled]="isReadOnly()"
                 placeholder="Add a new task..."
                 class="flex-1 rounded-lg border-gray-300 border px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none transition bg-gray-50 dark:bg-slate-800 dark:text-gray-300"
               />
               <button
                 (click)="addTask()"
+                [disabled]="isReadOnly()"
                 class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition shadow-md"
               >
                 + Add
@@ -216,14 +237,47 @@
             <p class="text-center text-gray-400 py-8 dark:text-gray-300">
               No tasks yet. Add one above!
             </p>
+            } @if (isReadOnly()) {
+            <div
+              class="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 p-4 rounded-r-lg"
+            >
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path
+                      fill-rule="evenodd"
+                      d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm text-yellow-700 dark:text-yellow-200">
+                    This project is <strong>{{ project().status }}</strong
+                    >. You cannot modify tasks or chat.
+                    <button
+                      (click)="toggleEdit()"
+                      class="underline font-bold hover:text-yellow-800 ml-1"
+                    >
+                      Edit Status
+                    </button>
+                    to restore.
+                  </p>
+                </div>
+              </div>
+            </div>
             }
             <div
               *ngFor="let task of tasks()"
               class="flex items-center gap-4 p-4 rounded-lg border border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition group bg-white dark:bg-slate-800"
             >
               <div
-                (click)="toggleTask(task)"
-                class="w-6 h-6 rounded border-2 cursor-pointer flex items-center justify-center transition-colors duration-200"
+                (click)="!isReadOnly() && toggleTask(task)"
+                class="w-6 h-6 rounded border-2 flex items-center justify-center transition-colors duration-200"
+                [class.cursor-pointer]="!isReadOnly()"
+                [class.cursor-not-allowed]="isReadOnly()"
+                [class.opacity-50]="isReadOnly()"
+                [class.bg-green-500]="task.isCompleted"
                 [class.bg-green-500]="task.isCompleted"
                 [class.border-green-500]="task.isCompleted"
                 [class.border-gray-300]="!task.isCompleted"
@@ -237,6 +291,7 @@
                 >{{ task.description }}</span
               >
               <button
+                [disabled]="isReadOnly()"
                 class="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
               >
                 ✕
@@ -263,7 +318,7 @@
             class="flex-1 overflow-y-auto min-h-0 p-4 space-y-4 bg-gray-50 dark:bg-slate-900 scrollbar-thin"
           >
             @if (messages().length === 0) {
-            <p class="text-center text-gray-400 text-sm mt-10">No messages yet. Say hello! 👋</p>
+            <p class="text-center text-gray-400 text-sm mt-10">No messages yet.</p>
             }
             <div
               *ngFor="let msg of messages()"
@@ -312,6 +367,29 @@
           <div
             class="p-3 border-t border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 shrink-0 rounded-b-xl"
           >
+            @if (isReadOnly()) {
+            <div
+              class="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700/50 rounded-lg p-3 text-center"
+            >
+              <p
+                class="text-sm text-yellow-700 dark:text-yellow-200 flex items-center justify-center gap-2"
+              >
+                <span
+                  >🔒 Project is <strong>{{ project().status }}</strong
+                  >. Chat disabled.</span
+                >
+
+                @if (isOwner()) {
+                <button
+                  (click)="toggleEdit()"
+                  class="underline font-bold hover:text-yellow-800 transition text-xs"
+                >
+                  Restore
+                </button>
+                }
+              </p>
+            </div>
+            } @else {
             <div class="flex gap-2">
               <input
                 type="text"
@@ -327,6 +405,7 @@
                 ➤
               </button>
             </div>
+            }
           </div>
         </div>
       </section>

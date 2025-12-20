@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
+import Project from "../models/project.model.js";
 dotenv.config();
 
 //init gemini
@@ -33,7 +34,14 @@ export const generateDescription = async (req, res) => {
 
 export const generateTasks = async (req, res) => {
   try {
-    const { description } = req.body;
+    const { description, projectId } = req.body;
+    const project = await Project.findByPk(projectId);
+    if (project.status !== "active") {
+      return res.status(403).json({
+        message:
+          "Project is completed/archived/abandoned. Please restore it to use.",
+      });
+    }
 
     if (!description) {
       return res

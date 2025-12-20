@@ -1,5 +1,14 @@
 // frontend/src/app/features/dashboard/dashboard.component.ts
-import { Component, inject, OnDestroy, OnInit, signal, ViewChild, ElementRef } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnDestroy,
+  OnInit,
+  signal,
+  ViewChild,
+  ElementRef,
+  computed,
+} from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth';
 import { CommonModule } from '@angular/common';
@@ -26,6 +35,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isLoading = signal(false);
   isAiLoading = signal(false); // New signal for the sparkle button loading state
   selectedFile: File | null = null; //hold file
+  filterStatus = signal('active'); //active archived all
   //get access to html elem
   @ViewChild('fileInput') fileInput!: ElementRef;
   //form new project
@@ -33,6 +43,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
     name: ['', Validators.required],
     description: [''],
     deadline: [''],
+  });
+
+  //computed list shown in html
+  filteredProjects = computed(() => {
+    const status = this.filterStatus();
+    const all = this.projects();
+
+    if (status === 'all') return all;
+    //group active tab like active and completed
+    //archived and abandoned
+    if (status === 'active') {
+      return all.filter((p) => p.status === 'active' || p.status === 'completed');
+    }
+
+    if (status === 'archived') {
+      return all.filter((p) => p.status === 'archived' || p.status === 'abandoned');
+    }
+
+    return all;
   });
 
   ngOnInit() {

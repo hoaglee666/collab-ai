@@ -1,11 +1,20 @@
 // backend/src/controllers/task.controller.js
+import Project from "../models/project.model.js";
 import Task from "../models/task.model.js";
 
 // 1. Create a Task manually
 export const createTask = async (req, res) => {
   try {
     const { projectId, description } = req.body;
-
+    const project = await Project.findByPk(projectId);
+    if (project.status !== "active") {
+      return res
+        .status(403)
+        .json({
+          message:
+            "Project is archived/completed/abandoned. Restore to active to add tasks",
+        });
+    }
     const task = await Task.create({
       projectId,
       description,

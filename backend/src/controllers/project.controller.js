@@ -52,8 +52,10 @@ export const getProjects = async (req, res) => {
     const searchCondition = search
       ? {
           [Op.or]: [
-            { name: { [Op.iLike]: `%${search}%` } }, // Case-insensitive search
+            { name: { [Op.iLike]: `%${search}%` } },
             { description: { [Op.iLike]: `%${search}%` } },
+            // NEW: Search by Creator Name
+            { "$User.username$": { [Op.iLike]: `%${search}%` } },
           ],
         }
       : {};

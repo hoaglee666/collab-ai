@@ -32,7 +32,7 @@ import { ChatService } from '../../core/services/chat';
   templateUrl: './project-detail.html',
   styleUrl: './project-detail.scss',
 })
-export class ProjectDetailComponent implements OnInit, OnDestroy, AfterViewChecked {
+export class ProjectDetailComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private projectService = inject(ProjectService);
   private authService = inject(AuthService);
@@ -42,8 +42,6 @@ export class ProjectDetailComponent implements OnInit, OnDestroy, AfterViewCheck
   private fb = inject(FormBuilder);
 
   @ViewChild('chatContainer') chatContainer!: ElementRef;
-  shouldScroll = false;
-
   selectedFile: File | null = null; //track image
   project = signal<any>(null);
   tasks = signal<any[]>([]); // <--- New: Store the list of tasks
@@ -116,7 +114,6 @@ export class ProjectDetailComponent implements OnInit, OnDestroy, AfterViewCheck
       // 2. Load Messages & Handle Auto-Scroll
       this.chatService.getMessages(id).subscribe((msgs) => {
         this.messages.set(msgs);
-        this.scrollToBottom();
 
         // ✨ CHECK URL PARAMETER
         // We check this AFTER messages are loaded so there is content to scroll to
@@ -149,18 +146,6 @@ export class ProjectDetailComponent implements OnInit, OnDestroy, AfterViewCheck
     this.chatService.sendMessage(this.project().id, this.newMessage).subscribe(() => {
       this.newMessage = ''; //clear input
     });
-  }
-
-  scrollToBottom() {
-    this.shouldScroll = true;
-  }
-
-  ngAfterViewChecked() {
-    if (this.shouldScroll && this.chatContainer) {
-      const el = this.chatContainer.nativeElement;
-      el.scrollTop = el.scrollHeight;
-      this.shouldScroll = false;
-    }
   }
 
   ngOnDestroy() {
@@ -281,7 +266,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy, AfterViewCheck
   confirmUpdate() {
     if (this.editForm.invalid) return;
 
-    const { name, description, deadline } = this.editForm.value;
+    const { name, description, deadline, status } = this.editForm.value;
     const formData = new FormData();
     formData.append('name', name);
     formData.append('description', description);
@@ -290,6 +275,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy, AfterViewCheck
     if (this.selectedFile) {
       formData.append('image', this.selectedFile);
     }
+    formData.append('status', status);
 
     this.projectService.updateProject(this.project().id, formData).subscribe({
       next: (res) => {
@@ -302,6 +288,23 @@ export class ProjectDetailComponent implements OnInit, OnDestroy, AfterViewCheck
     });
   }
 
+  scrollToBottom() {
+    // Using setTimeout(..., 100) pushes this action to the end of the browser's "To Do" list.
+    // This guarantees that Angular has finished painting the *ngFor rows
+    // and the browser has calculated the new correct height.
+    setTimeout(() => {
+      if (this.chatContainer) {
+        const el = this.chatContainer.nativeElement;
+        el.scrollTop = el.scrollHeight; // Jump to the absolute bottom
+      }
+    }, 100);
+  }
+
+  isReadOnly = computed(() => {
+    const status = this.project()?.status;
+    return status !== 'active';
+  });
+
   //toglg edit
   toggleEdit() {
     this.isEditing.update((v) => !v);
@@ -312,6 +315,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy, AfterViewCheck
         name: [this.project().name, Validators.required],
         description: [this.project().description],
         deadline: [this.project().deadline], // <--- Pre-fill date
+        status: [this.project().status],
       });
     } else {
       // If cancelling, reset file selection

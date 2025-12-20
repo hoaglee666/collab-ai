@@ -4,6 +4,8 @@ import { RouterLink } from '@angular/router';
 import { ProjectService } from '../../core/services/project';
 import { SidebarComponent } from '../../shared/components/sidebar/sidebar';
 import { FormsModule } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 @Component({
   selector: 'app-community',
@@ -13,7 +15,7 @@ import { FormsModule } from '@angular/forms';
 })
 export class CommunityComponent implements OnInit {
   private projectService = inject(ProjectService);
-
+  private searchSubject = new Subject<string>();
   // Use a signal for the list
   projects = signal<any[]>([]);
   totalItems = signal(0);
@@ -39,6 +41,13 @@ export class CommunityComponent implements OnInit {
 
   ngOnInit() {
     this.fetchProjects();
+    // 3. Setup the "Debounce" pipe
+    // This waits 300ms after the last keystroke before calling the API
+    this.searchSubject.pipe(debounceTime(300), distinctUntilChanged()).subscribe((searchValue) => {
+      this.searchQuery.set(searchValue); // Update signal
+      this.currentPage.set(1); // Reset to page 1
+      this.fetchProjects(); // Call API
+    });
   }
 
   fetchProjects() {
@@ -64,9 +73,10 @@ export class CommunityComponent implements OnInit {
   }
 
   //actions
-  onSearch() {
-    this.currentPage.set(1); // Reset to page 1 when searching
-    this.fetchProjects();
+  // This is now called on every keystroke
+  onSearch(event?: any) {
+    const value = event ? event.target.value : this.searchQuery();
+    this.searchSubject.next(value);
   }
 
   onSortChange(event: any) {

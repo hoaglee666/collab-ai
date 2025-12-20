@@ -25,7 +25,7 @@ const Project = sequelize.define("Project", {
     allowNull: true,
   },
   status: {
-    type: DataTypes.ENUM("active", "completed", "archived"),
+    type: DataTypes.ENUM("active", "completed", "archived", "abandoned"),
     defaultValue: "active",
   },
   //check who created

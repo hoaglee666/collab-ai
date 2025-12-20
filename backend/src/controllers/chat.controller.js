@@ -13,6 +13,9 @@ export const sendMessage = async (req, res) => {
 
     const message = await Message.create({ content, projectId, userId });
     const project = await Project.findByPk(projectId);
+    if (project.status !== "active") {
+      return res.status(403).json({ message: "Project is read-only" });
+    }
     const previousMessages = await Message.findAll({
       where: { projectId },
       attributes: ["userId"], // Only fetch user IDs
