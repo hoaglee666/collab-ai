@@ -24,7 +24,8 @@ const socialAuthCallback = (req, res) => {
   );
 
   // Redirect to Frontend with token in URL
-  res.redirect(`http://localhost:4200/login-success?token=${token}`);
+  const clientUrl = process.env.CLIENT_URL || "http://localhost:4200";
+  res.redirect(`${clientUrl}/login-success?token=${token}`);
 };
 const router = express.Router();
 const storage = multer.diskStorage({

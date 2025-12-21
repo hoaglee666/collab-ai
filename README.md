@@ -146,7 +146,7 @@ docker compose up -d --build
 
 ### 🌐 Access the App
 
-- Frontend: http://localhost:4200
+- Frontend: http://localhost
 - Backend API: http://localhost:3000
 - PostgreSQL: localhost:5432
 

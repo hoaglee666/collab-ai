@@ -8,12 +8,10 @@ export const createTask = async (req, res) => {
     const { projectId, description } = req.body;
     const project = await Project.findByPk(projectId);
     if (project.status !== "active") {
-      return res
-        .status(403)
-        .json({
-          message:
-            "Project is archived/completed/abandoned. Restore to active to add tasks",
-        });
+      return res.status(403).json({
+        message:
+          "Project is archived/completed/abandoned. Restore to active to add tasks",
+      });
     }
     const task = await Task.create({
       projectId,
@@ -63,5 +61,31 @@ export const getTasks = async (req, res) => {
     res.json(tasks);
   } catch (error) {
     res.status(500).json({ message: "Error fetching tasks" });
+  }
+};
+
+export const deleteTask = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 1. Find the task first (we need to check the project status)
+    const task = await Task.findByPk(id, { include: "Project" }); // Ensure 'Project' is the correct alias in your models
+
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    // 2. Security Check: Is project active?
+    if (task.Project.status !== "active") {
+      return res.status(403).json({ message: "Project is read-only." });
+    }
+
+    // 3. Delete it
+    await task.destroy();
+
+    res.json({ message: "Task deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error deleting task" });
   }
 };

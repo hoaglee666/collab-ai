@@ -292,6 +292,7 @@
               >
               <button
                 [disabled]="isReadOnly()"
+                (click)="deleteTask(task); $event.stopPropagation()"
                 class="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
               >
                 ✕

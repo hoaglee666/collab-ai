@@ -178,6 +178,23 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     });
   }
 
+  deleteTask(task: any) {
+    if (!confirm('Are you sure you want to delete this task?')) return;
+
+    // 1. Optimistic Update (Remove from UI immediately)
+    const previousTasks = this.tasks(); // Backup in case of error
+    this.tasks.update((list) => list.filter((t) => t.id !== task.id));
+
+    // 2. Call API
+    this.projectService.deleteTask(task.id).subscribe({
+      error: () => {
+        // If server fails, revert the change
+        this.tasks.set(previousTasks);
+        alert('Failed to delete task');
+      },
+    });
+  }
+
   // --- NEW TASK FUNCTIONS ---
 
   loadTasks(projectId: string) {
@@ -218,16 +235,17 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
   }
 
   generateAiTasks() {
-    if (!this.project()?.description) {
+    const project = this.project();
+    if (!project?.description) {
       alert('This project has no description for the AI to read!');
       return;
     }
     this.isAiLoading.set(true);
     //ask ai for ideas
-    this.projectService.getAiTasks(this.project().description).subscribe({
+    this.projectService.getAiTasks(project.id, project.description).subscribe({
       next: (res) => {
         //save to db
-        res.tasks.forEach((taskDesc) => {
+        res.tasks.forEach((taskDesc: string) => {
           this.createTaskFromAi(taskDesc);
         });
         this.isAiLoading.set(false);

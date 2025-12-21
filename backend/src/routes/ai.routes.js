@@ -8,7 +8,7 @@ import { verifyToken } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
-router.post("/generate", verifyToken, generateDescription);
-router.post("/suggest-tasks", verifyToken, generateTasks);
+router.post("/generate-description", verifyToken, generateDescription);
+router.post("/generate-tasks", verifyToken, generateTasks);
 router.post("/chat", verifyToken, chatWithAdvisor);
 export default router;

@@ -22,9 +22,12 @@ services:
     restart: always
     ports:
       - "3000:3000"
+    env_file:
+      - ./backend/.env # Read the file first
     environment:
       PORT: 3000
       DB_HOST: postgres # Matches the service name above
+      CLIENT_URL: http://localhost
       DB_USER: admin
       DB_PASS: password123
       DB_NAME: collab_ai_db

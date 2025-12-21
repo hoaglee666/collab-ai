@@ -5,10 +5,12 @@ import Task from "../models/task.model.js";
 
 dotenv.config();
 
-//init gemini
+// Initialize Gemini (Global)
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Note: You can switch models here (e.g., "gemini-1.5-flash" or "gemini-1.5-pro")
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
+// 1. Generate Project Description (Used when creating a project)
 export const generateDescription = async (req, res) => {
   try {
     if (!process.env.GEMINI_API_KEY) {
@@ -18,11 +20,13 @@ export const generateDescription = async (req, res) => {
     if (!projectName) {
       return res.status(400).json({ message: "Project name is required" });
     }
-    //prompt
+
     const prompt = `Write a short, professional, and exciting project description (max 2 sentences) for a software project named "${projectName}".`;
+
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
+
     res.json({ suggestion: text });
   } catch (error) {
     console.error("AI Error:", error);
@@ -30,14 +34,25 @@ export const generateDescription = async (req, res) => {
   }
 };
 
-// backend/src/controllers/ai.controller.js
-
-// ... existing generateDescription ...
-
+// 2. Generate Tasks (The Auto-Plan Feature)
 export const generateTasks = async (req, res) => {
   try {
+    // Only get description & ID from frontend (we get Name from DB)
     const { description, projectId } = req.body;
+
+    // A. Validate Input
+    if (!projectId) {
+      return res.status(400).json({ message: "Project ID is required" });
+    }
+
+    // B. Fetch Project
     const project = await Project.findByPk(projectId);
+
+    // C. Security Checks
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
     if (project.status !== "active") {
       return res.status(403).json({
         message:
@@ -45,26 +60,36 @@ export const generateTasks = async (req, res) => {
       });
     }
 
+    // We allow description to be empty if the project has a name,
+    // but usually description is helpful.
     if (!description) {
       return res
         .status(400)
         .json({ message: "Project description is required" });
     }
 
-    // Prompt for the AI
-    const prompt = `Based on this project description: "${description}", generate 5 short, actionable technical tasks. Return ONLY a JSON array of strings, like ["Task 1", "Task 2"]. Do not add markdown formatting.`;
+    // --- AI Logic ---
+    // ✅ FIX: We now use project.name from the DB in the prompt
+    const prompt = `
+      Project Title: "${project.name}"
+      Description: "${description}"
+      
+      Based on this, generate 5 short, actionable technical tasks. 
+      Return ONLY a JSON array of strings, like ["Task 1", "Task 2"]. 
+      Do not add markdown formatting.
+    `;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
     let text = response.text();
 
-    // Clean up if AI adds markdown code blocks (```json ... ```)
+    // Clean up markdown if AI adds it
     text = text
       .replace(/```json/g, "")
       .replace(/```/g, "")
       .trim();
 
-    const tasks = JSON.parse(text); // Convert string to real Array
+    const tasks = JSON.parse(text);
 
     res.json({ tasks });
   } catch (error) {
@@ -73,18 +98,19 @@ export const generateTasks = async (req, res) => {
   }
 };
 
+// 3. Chat with Advisor (The Floating Bot)
 export const chatWithAdvisor = async (req, res) => {
   try {
     const { message } = req.body;
     const userId = req.user.id;
 
-    //fetch user real context
+    // Fetch user real context
     const projects = await Project.findAll({
       where: { userId },
-      include: [{ model: Task }], //get task to cal progres
+      include: [{ model: Task }],
     });
 
-    //summar data for ai, turn db ojbect to string
+    // Summarize data for AI
     const projectSummary = projects
       .map((p) => {
         const totalTasks = p.Tasks.length;
@@ -92,15 +118,15 @@ export const chatWithAdvisor = async (req, res) => {
         const progress =
           totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-        return `>Project: "${p.name}"
-      >Status: ${p.status}
-      >Deadline: ${p.deadline || "No deadline"}
-      >Progress: ${progress}% (${completedTasks}/${totalTasks} tasks)
-      >Description: ${p.description || "N/A"}`;
+        return `> Project: "${p.name}"
+      > Status: ${p.status}
+      > Deadline: ${p.deadline || "No deadline"}
+      > Progress: ${progress}% (${completedTasks}/${totalTasks} tasks)
+      > Description: ${p.description || "N/A"}`;
       })
       .join("\n");
 
-    //system prompt
+    // System Prompt
     const systemPrompt = `
       You are an expert Project Management Advisor named "CollabBot".
       You are talking to the user about their specific projects.
@@ -118,9 +144,7 @@ export const chatWithAdvisor = async (req, res) => {
       - If they have no projects, tell them to create one.
       `;
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
-
+    // Re-use the global model instance (No need to init again)
     const result = await model.generateContent(systemPrompt);
     const response = await result.response;
     const text = response.text();

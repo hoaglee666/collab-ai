@@ -52,6 +52,18 @@ export class ProjectService {
     return this.http.delete(`${this.apiUrl}/${id}`, this.getHeaders());
   }
 
+  deleteTask(taskId: string): Observable<any> {
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+
+    // ❌ OLD (Wrong: /api/projects/tasks/...)
+    // return this.http.delete(`${this.apiUrl}/tasks/${taskId}`, { headers });
+
+    // ✅ NEW (Correct: /api/tasks/...)
+    // We assume your base API is running on localhost:3000/api
+    return this.http.delete(`http://localhost:3000/api/tasks/${taskId}`, { headers });
+  }
+
   // Add this method inside your ProjectService class
   generateDescription(projectName: string): Observable<{ suggestion: string }> {
     return this.http.post<{ suggestion: string }>(
@@ -86,11 +98,15 @@ export class ProjectService {
     );
   }
 
-  getAiTasks(description: string): Observable<{ tasks: string[] }> {
-    return this.http.post<{ tasks: string[] }>(
-      'http://localhost:3000/api/ai/suggest-tasks',
-      { description },
-      this.getHeaders()
+  getAiTasks(projectId: string, description: string): Observable<any> {
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+
+    // Send BOTH projectId and description
+    return this.http.post(
+      'http://localhost:3000/api/ai/generate-tasks',
+      { projectId, description },
+      { headers }
     );
   }
 
