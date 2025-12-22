@@ -1,0 +1,66 @@
+<div class="flex h-screen bg-gray-50 dark:bg-slate-900 font-sans">
+  <app-sidebar></app-sidebar>
+
+  <main class="flex-1 overflow-y-auto p-8">
+    <h1 class="text-3xl font-bold text-gray-800 dark:text-white mb-8">🛡️ System Overview</h1>
+
+    @if (isLoading()) {
+    <p class="text-gray-500">Loading metrics...</p>
+    } @else if (stats()) {
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border-l-4 border-blue-500">
+        <p class="text-sm text-gray-500 uppercase font-bold">Total Users</p>
+        <p class="text-3xl font-bold text-gray-800 dark:text-white mt-2">
+          {{ stats().totalUsers }}
+        </p>
+      </div>
+
+      <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border-l-4 border-purple-500">
+        <p class="text-sm text-gray-500 uppercase font-bold">Projects Created</p>
+        <p class="text-3xl font-bold text-gray-800 dark:text-white mt-2">
+          {{ stats().totalProjects }}
+        </p>
+      </div>
+
+      <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border-l-4 border-green-500">
+        <p class="text-sm text-gray-500 uppercase font-bold">Active Now</p>
+        <p class="text-3xl font-bold text-gray-800 dark:text-white mt-2">
+          {{ stats().activeProjects }}
+        </p>
+      </div>
+
+      <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border-l-4 border-yellow-500">
+        <p class="text-sm text-gray-500 uppercase font-bold">Tasks Tracked</p>
+        <p class="text-3xl font-bold text-gray-800 dark:text-white mt-2">
+          {{ stats().totalTasks }}
+        </p>
+      </div>
+    </div>
+
+    <div
+      class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden"
+    >
+      <div class="p-4 border-b border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-900">
+        <h3 class="font-bold text-gray-700 dark:text-gray-200">🆕 Newest Members</h3>
+      </div>
+      <table class="w-full text-left text-sm">
+        <thead class="bg-gray-50 dark:bg-slate-900 text-gray-500 uppercase text-xs">
+          <tr>
+            <th class="p-4">Username</th>
+            <th class="p-4">Email</th>
+            <th class="p-4">Joined</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-slate-700">
+          <tr *ngFor="let user of stats().recentUsers">
+            <td class="p-4 font-bold text-gray-700 dark:text-gray-300">{{ user.username }}</td>
+            <td class="p-4 text-gray-500">{{ user.email }}</td>
+            <td class="p-4 text-gray-400">{{ user.createdAt | date : 'shortDate' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    }
+  </main>
+</div>

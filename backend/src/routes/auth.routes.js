@@ -16,7 +16,11 @@ import jwt from "jsonwebtoken";
 const socialAuthCallback = (req, res) => {
   const user = req.user;
   const token = jwt.sign(
-    { id: user.id, email: user.email },
+    {
+      id: user.id,
+      email: user.email,
+      role: user.role, // <--- ADD THIS LINE
+    },
     process.env.JWT_SECRET,
     {
       expiresIn: "24h",

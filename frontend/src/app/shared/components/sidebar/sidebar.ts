@@ -13,6 +13,8 @@ import { AuthService } from '../../../core/services/auth';
 export class SidebarComponent {
   private authService = inject(AuthService);
 
+  user = this.authService.currentUser;
+
   logout() {
     this.authService.logout();
   }

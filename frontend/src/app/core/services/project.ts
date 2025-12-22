@@ -67,7 +67,7 @@ export class ProjectService {
   // Add this method inside your ProjectService class
   generateDescription(projectName: string): Observable<{ suggestion: string }> {
     return this.http.post<{ suggestion: string }>(
-      'http://localhost:3000/api/ai/generate',
+      'http://localhost:3000/api/ai/generate-description',
       { projectName },
       this.getHeaders()
     );

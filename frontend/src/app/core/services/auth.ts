@@ -1,8 +1,9 @@
 // frontend/src/app/core/services/auth.service.ts
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Router } from '@angular/router';
+import { tap } from 'rxjs/operators'; // <--- 1. IMPORT ADDED HERE
 
 @Injectable({
   providedIn: 'root',
@@ -11,27 +12,32 @@ export class AuthService {
   private http = inject(HttpClient);
   private apiUrl = 'http://localhost:3000/api/auth';
   private router = inject(Router);
-  //reg meth
+
+  currentUser = signal<any>(null);
+
+  // reg meth
   register(userData: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/register`, userData);
   }
 
-  //login meth
+  // login meth
   login(credentials: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/login`, credentials);
   }
 
   logout() {
     localStorage.removeItem('token');
+    // Clear the current user signal on logout
+    this.currentUser.set(null);
     this.router.navigate(['/login']);
   }
 
-  //save token to brow storage
+  // save token to brow storage
   saveToken(token: string) {
     localStorage.setItem('token', token);
   }
 
-  //get token
+  // get token
   getToken() {
     return localStorage.getItem('token');
   }
@@ -54,7 +60,7 @@ export class AuthService {
     const token = this.getToken();
     if (!token) return null;
     try {
-      //decode middle part of paylod
+      // decode middle part of payload
       const payload = JSON.parse(atob(token.split('.')[1]));
       return payload.id;
     } catch (e) {
@@ -62,17 +68,20 @@ export class AuthService {
     }
   }
 
-  getProfile(): Observable<any> {
+  getProfile() {
+    // 2. ADDED HEADER HERE (Usually profile needs auth token)
     const token = this.getToken();
     const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
-    // We can reuse the same endpoint if we change the backend to support GET,
-    // OR just use a simple trick: The 'verifyToken' middleware attaches the user to req.user.
-    // Let's create a quick new route in Backend for this?
-    // ACTUALLY: Let's just use the '/api/auth/profile' endpoint but make sure Backend has a GET for it.
 
-    return this.http.get('http://localhost:3000/api/auth/profile', { headers });
+    return this.http.get<any>(`${this.apiUrl}/profile`, { headers }).pipe(
+      // 3. ADDED TYPE '(user: any)'
+      tap((user: any) => {
+        this.currentUser.set(user);
+      })
+    );
   }
-  //helper uplaod
+
+  // helper upload
   uploadAvatar(file: File): Observable<any> {
     const formData = new FormData();
     formData.append('avatar', file);

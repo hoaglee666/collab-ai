@@ -45,23 +45,30 @@ export class DashboardComponent implements OnInit, OnDestroy {
     deadline: [''],
   });
 
-  //computed list shown in html
+  // computed list shown in html
   filteredProjects = computed(() => {
-    const status = this.filterStatus();
+    const status = this.filterStatus(); // 'active' | 'archived' | 'all'
     const all = this.projects();
 
+    // 1. If tab is 'all', just return everything immediately
     if (status === 'all') return all;
-    //group active tab like active and completed
-    //archived and abandoned
-    if (status === 'active') {
-      return all.filter((p) => p.status === 'active' || p.status === 'completed');
-    }
 
-    if (status === 'archived') {
-      return all.filter((p) => p.status === 'archived' || p.status === 'abandoned');
-    }
+    return all.filter((p) => {
+      // 🛡️ Safety Check: Ensure status exists, lowercase it, and trim spaces
+      const pStatus = (p.status || '').toLowerCase().trim();
 
-    return all;
+      if (status === 'active') {
+        // Checks for 'active' or 'completed'
+        return pStatus === 'active' || pStatus === 'completed';
+      }
+
+      if (status === 'archived') {
+        // Checks for 'archived' or 'abandoned'
+        return pStatus === 'archived' || pStatus === 'abandoned';
+      }
+
+      return false;
+    });
   });
 
   ngOnInit() {
@@ -89,8 +96,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   loadProjects() {
     this.projectService.getMyProjects().subscribe({
-      // Was getProjects()
       next: (data) => {
+        console.log('📦 Projects from API:', data); // <--- Add this!
         this.projects.set(data);
         this.isLoading.set(false);
       },

@@ -117,7 +117,12 @@
         </button>
       </div>
       <h3 class="text-lg font-bold text-gray-700 dark:text-white mb-4">Your Projects</h3>
-
+      <div class="bg-red-100 p-4 mb-4 rounded text-xs font-mono text-red-800">
+        <p><strong>Raw Projects Count:</strong> {{ projects().length }}</p>
+        <p><strong>Current Filter Tab:</strong> "{{ filterStatus() }}"</p>
+        <p><strong>Filtered Count:</strong> {{ filteredProjects().length }}</p>
+        <pre>{{ projects() | json }}</pre>
+      </div>
       @if (projects().length === 0) {
       <div
         class="text-center py-12 bg-gray-50 dark:bg-slate-800 rounded-lg border-2 border-dashed border-gray-200 dark:border-slate-700"
@@ -127,31 +132,34 @@
       }
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (project of filteredProjects(); track project.id) {
+
         <div
-          *ngFor="let project of filteredProjects()"
           [routerLink]="['/projects', project.id]"
-          class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden hover:shadow-lg transition group cursor-pointer"
+          class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden hover:shadow-lg transition group cursor-pointer relative"
         >
           <div class="h-40 w-full bg-gray-100 dark:bg-slate-700 relative overflow-hidden">
             @if (project.imageUrl) {
             <img
               [src]="'http://localhost:3000' + project.imageUrl"
               class="w-full h-full object-cover transition duration-500 group-hover:scale-110"
+              onerror="this.style.display='none'"
             />
-            } @else {
+            } @if (!project.imageUrl) {
             <div
               class="w-full h-full flex items-center justify-center text-gray-300 dark:text-slate-500 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-slate-700 dark:to-slate-600"
             >
               <span class="text-4xl">📁</span>
             </div>
             }
+
             <span
-              class="absolute top-2 right-2 px-2 py-1 text-[10px] font-bold rounded uppercase tracking-wide border shadow-sm"
+              class="absolute top-2 right-2 px-2 py-1 text-[10px] font-bold rounded uppercase tracking-wide border shadow-sm bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm z-10"
               [ngClass]="{
-                'bg-green-100 text-green-700 border-green-200': project.status === 'active',
-                'bg-blue-100 text-blue-700 border-blue-200': project.status === 'completed',
-                'bg-gray-100 text-gray-600 border-gray-200': project.status === 'archived',
-                'bg-red-100 text-red-700 border-red-200': project.status === 'abandoned'
+                'text-green-700 border-green-200': project.status === 'active',
+                'text-blue-700 border-blue-200': project.status === 'completed',
+                'text-gray-600 border-gray-200': project.status === 'archived',
+                'text-red-700 border-red-200': project.status === 'abandoned'
               }"
             >
               {{ project.status }}
@@ -160,33 +168,35 @@
 
           <div class="p-5">
             <h4
-              class="font-bold text-lg text-gray-800 dark:text-gray-200 mb-1 group-hover:text-blue-600 transition"
+              class="font-bold text-lg text-gray-800 dark:text-white mb-1 group-hover:text-blue-600 transition truncate"
             >
               {{ project.name }}
             </h4>
+
             <div class="flex items-center gap-2 mb-3">
               <div
                 class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold overflow-hidden border border-gray-200 dark:border-slate-600"
               >
+                @if (project.User?.avatarUrl) {
                 <img
-                  *ngIf="project.User?.avatarUrl"
                   [src]="'http://localhost:3000' + project.User.avatarUrl"
                   class="w-full h-full object-cover"
                 />
-
-                <span *ngIf="!project.User?.avatarUrl">
-                  {{ project.User?.username?.charAt(0) | uppercase }}
-                </span>
+                } @else {
+                <span>{{ project.User?.username?.charAt(0) || '?' }}</span>
+                }
               </div>
               <span class="text-xs text-gray-500 dark:text-gray-400"
                 >by {{ project.User?.username }}</span
               >
             </div>
+
             <p class="text-gray-600 dark:text-gray-400 text-sm line-clamp-2 h-10">
               {{ project.description }}
             </p>
           </div>
         </div>
+        }
       </div>
     </div>
   </main>

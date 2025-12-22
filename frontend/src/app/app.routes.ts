@@ -9,6 +9,7 @@ import { SettingsComponent } from './features/settings/settings';
 import { CommunityComponent } from './features/community/community';
 import { ProfileComponent } from './features/profile/profile';
 import { LoginSuccessComponent } from './features/login-success/login-success';
+import { adminGuard } from './core/guards/admin-guard';
 
 export const routes: Routes = [
   { path: 'register', component: RegisterComponent },
@@ -28,6 +29,12 @@ export const routes: Routes = [
     path: 'profile',
     component: ProfileComponent,
     canActivate: [authGuard],
+  },
+  {
+    path: 'admin',
+    loadComponent: () =>
+      import('./features/admin-dashboard/admin-dashboard').then((m) => m.AdminDashboardComponent),
+    canActivate: [authGuard, adminGuard], // 🔒 Double Lock: Must be Logged In AND Admin
   },
   { path: 'community', component: CommunityComponent, canActivate: [authGuard] },
   { path: 'settings', component: SettingsComponent, canActivate: [authGuard] },

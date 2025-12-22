@@ -20,6 +20,7 @@ import Message from "./src/models/message.model.js";
 import chatRoutes from "./src/routes/chat.routes.js";
 import Notification from "./src/models/notification.model.js";
 import notificationRoutes from "./src/routes/notification.routes.js";
+import adminRoutes from "./src/routes/admin.routes.js";
 
 dotenv.config();
 
@@ -51,6 +52,7 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/notifications", notificationRoutes);
 // Socket.io Logic
