@@ -2,7 +2,7 @@ import Project from "../models/project.model.js";
 import User from "../models/user.model.js";
 import { Op } from "sequelize";
 
-//create project
+// create project
 export const createProject = async (req, res) => {
   try {
     const { name, description, deadline } = req.body;
@@ -17,12 +17,13 @@ export const createProject = async (req, res) => {
       deadline,
     });
 
-    // req.io.emit('project:created', project);
-    // ^ IMPORTANT: We need to fetch the User info before emitting,
-    // otherwise the real-time update won't show the "Created By" name immediately.
-    // Let's do a quick reload of the project with the User included.
+    // 🔄 RELOAD WITH CORRECT ALIAS
     const projectWithUser = await Project.findByPk(project.id, {
-      include: { model: User, attributes: ["username"] }, // Don't forget to import User if not imported!
+      include: {
+        model: User,
+        as: "Owner", // <--- FIXED: Added alias
+        attributes: ["username"],
+      },
     });
 
     req.io.emit("project:created", projectWithUser);
@@ -35,44 +36,39 @@ export const createProject = async (req, res) => {
   }
 };
 
-//get all projects (public community)
+// get all projects (public community)
 export const getProjects = async (req, res) => {
   try {
-    // 1. Read Query Params (with defaults)
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 6; // 6 items per page
+    const limit = parseInt(req.query.limit) || 6;
     const search = req.query.search || "";
     const sortBy = req.query.sortBy || "createdAt";
     const order = req.query.order || "DESC";
-
-    // 2. Calculate Offset (Skip)
     const offset = (page - 1) * limit;
 
-    // 3. Build Search Condition
     const searchCondition = search
       ? {
           [Op.or]: [
             { name: { [Op.iLike]: `%${search}%` } },
             { description: { [Op.iLike]: `%${search}%` } },
-            // NEW: Search by Creator Name
-            { "$User.username$": { [Op.iLike]: `%${search}%` } },
+            // 🔎 FIXED: Search inside 'Owner', not 'User'
+            { "$Owner.username$": { [Op.iLike]: `%${search}%` } },
           ],
         }
       : {};
 
-    // 4. Fetch Data + Total Count (findAndCountAll is magic!)
     const { count, rows } = await Project.findAndCountAll({
       where: searchCondition,
       include: {
         model: User,
-        attributes: ["username", "avatarUrl"], // Include avatar for UI
+        as: "Owner", // <--- FIXED: Added alias
+        attributes: ["username", "avatarUrl"],
       },
       order: [[sortBy, order]],
       limit: limit,
       offset: offset,
     });
 
-    // 5. Return Data + Pagination Info
     res.json({
       projects: rows,
       totalItems: count,
@@ -80,19 +76,23 @@ export const getProjects = async (req, res) => {
       currentPage: page,
     });
   } catch (error) {
-    console.error(error); // Log for debugging
+    console.error(error);
     res.status(500).json({ message: "Error fetching projects" });
   }
 };
 
-//get mine
+// get mine
 export const getMyProjects = async (req, res) => {
   try {
-    const userId = req.user.id; // From Token
+    const userId = req.user.id;
     const projects = await Project.findAll({
-      where: { userId }, // <--- FILTER BY USER
+      where: { userId },
       order: [["createdAt", "DESC"]],
-      include: { model: User, attributes: ["username", "avatarUrl"] },
+      include: {
+        model: User,
+        as: "Owner", // <--- FIXED: Added alias
+        attributes: ["username", "avatarUrl"],
+      },
     });
     res.json(projects);
   } catch (error) {
@@ -100,15 +100,24 @@ export const getMyProjects = async (req, res) => {
   }
 };
 
+// get by ID (This was already good, keeping it correct)
 export const getProjectById = async (req, res) => {
   try {
     const { id } = req.params;
 
     const project = await Project.findByPk(id, {
-      include: {
-        model: User,
-        attributes: ["username"],
-      },
+      include: [
+        {
+          model: User,
+          as: "Owner",
+          attributes: ["id", "username", "avatarUrl"],
+        },
+        {
+          model: User,
+          as: "Members",
+          attributes: ["id", "username", "avatarUrl", "email"],
+        },
+      ],
     });
 
     if (!project) {
@@ -121,6 +130,7 @@ export const getProjectById = async (req, res) => {
   }
 };
 
+// delete (Standard)
 export const deleteProject = async (req, res) => {
   try {
     const { id } = req.params;
@@ -131,7 +141,7 @@ export const deleteProject = async (req, res) => {
         .status(404)
         .json({ message: "Project not found or unauthorized" });
     }
-    await project.destroy(); //delete project and tasks
+    await project.destroy();
     res.json({ message: "Project deleted successfully" });
   } catch (error) {
     res
@@ -140,6 +150,7 @@ export const deleteProject = async (req, res) => {
   }
 };
 
+// update (Standard)
 export const updateProject = async (req, res) => {
   try {
     const { id } = req.params;
@@ -154,21 +165,94 @@ export const updateProject = async (req, res) => {
         .json({ message: "Project not found or unauthorized" });
     }
 
-    // Update text fields
     if (name) project.name = name;
     if (description) project.description = description;
     if (status) project.status = status;
     if (deadline) project.deadline = deadline;
-
-    // NEW: Update Image if a file was uploaded
     if (req.file) {
       project.imageUrl = `/uploads/${req.file.filename}`;
     }
 
     await project.save();
-
     res.json({ message: "Project updated", project });
   } catch (error) {
     res.status(500).json({ message: "Update failed", error: error.message });
+  }
+};
+
+// Add Member
+export const addMember = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { email } = req.body;
+    const currentUserId = req.user.id;
+
+    const project = await Project.findByPk(id);
+    if (!project) return res.status(404).json({ message: "Project not found" });
+
+    if (project.userId !== currentUserId) {
+      return res
+        .status(403)
+        .json({ message: "Only the project owner can add members." });
+    }
+
+    const userToAdd = await User.findOne({ where: { email } });
+    if (!userToAdd)
+      return res
+        .status(404)
+        .json({ message: "User with this email not found." });
+
+    if (userToAdd.id === project.userId) {
+      return res.status(400).json({ message: "User is already the owner." });
+    }
+
+    const hasMember = await project.hasMember(userToAdd);
+    if (hasMember) {
+      return res.status(400).json({ message: "User is already in the team." });
+    }
+
+    await project.addMember(userToAdd);
+
+    res.json({
+      message: `${userToAdd.username} added to the team!`,
+      member: userToAdd,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to add member" });
+  }
+};
+
+// Remove Member
+export const removeMember = async (req, res) => {
+  try {
+    const { id, userId } = req.params;
+    const currentUserId = req.user.id;
+
+    const project = await Project.findByPk(id);
+    if (!project) return res.status(404).json({ message: "Project not found" });
+
+    if (project.userId !== currentUserId) {
+      return res
+        .status(403)
+        .json({ message: "Only the project owner can remove members." });
+    }
+
+    if (userId === project.userId) {
+      return res
+        .status(400)
+        .json({ message: "You cannot kick yourself (the owner)." });
+    }
+
+    const userToRemove = await User.findByPk(userId);
+    if (!userToRemove)
+      return res.status(404).json({ message: "User not found" });
+
+    await project.removeMember(userToRemove);
+
+    res.json({ message: "User removed from project." });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to remove member" });
   }
 };

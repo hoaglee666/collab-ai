@@ -18,6 +18,7 @@ import {
   FormBuilder,
   FormGroup,
   Validators,
+  FormControl,
 } from '@angular/forms'; // <--- Import FormsModule for the input
 import { ProjectService } from '../../core/services/project';
 import { AuthService } from '../../core/services/auth';
@@ -43,16 +44,23 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
 
   selectedFile: File | null = null; //track image
   project = signal<any>(null);
+  currentUser = this.authService.currentUser;
   tasks = signal<any[]>([]); // <--- New: Store the list of tasks
   isLoading = signal(true);
   newTaskDescription = ''; // <--- New: To hold the input text
   isAiLoading = signal(false);
-  isOwner = signal(false);
+  //owner check
+  isOwner = computed(() => {
+    const p = this.project();
+    const u = this.currentUser();
+    return p && u && p.userId === u.id;
+  });
   isEditing = signal(false); //toggle
   myId = '';
   messages = signal<any[]>([]);
   newMessage = '';
   editForm!: FormGroup;
+  inviteEmail = new FormControl('', [Validators.required, Validators.email]);
 
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
 
@@ -156,13 +164,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
 
   loadProject(id: string) {
     this.projectService.getProjectById(id).subscribe({
-      next: (data) => {
-        this.project.set(data);
-        // Check if the project's userId matches my ID
-        const myId = this.authService.getCurrentUserId(); // We need to create this helper!
-        this.isOwner.set(data.userId === myId);
-        this.isLoading.set(false);
-      },
+      next: (data) => this.project.set(data),
       error: (err) => console.error(err),
     });
   }
@@ -279,6 +281,42 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
 
     // Let's rely on the updated description/name in the HTML inputs
     // We will pass the new values in the method arguments from HTML for cleanliness.
+  }
+
+  inviteMember() {
+    if (this.inviteEmail.invalid || !this.inviteEmail.value) return;
+
+    const projectId = this.project().id;
+    const email = this.inviteEmail.value;
+
+    this.projectService.addMember(projectId, email).subscribe({
+      next: (res) => {
+        alert('User added!');
+        this.inviteEmail.reset();
+        // Refresh project to show new member
+        this.loadProject(projectId);
+      },
+      error: (err) => {
+        alert(err.error?.message || 'Failed to add member');
+      },
+    });
+  }
+
+  kickMember(userId: string) {
+    if (!confirm('Are you sure you want to remove this member?')) return;
+
+    const projectId = this.project().id;
+
+    this.projectService.removeMember(projectId, userId).subscribe({
+      next: () => {
+        // Optimistically update the UI (remove from list immediately)
+        this.project.update((p) => ({
+          ...p,
+          Members: p.Members.filter((m: any) => m.id !== userId),
+        }));
+      },
+      error: (err) => alert('Failed to remove member'),
+    });
   }
 
   // Revised Save Method (We will call this from HTML with new values)

@@ -1,183 +1,171 @@
 <div
-  class="flex flex-col h-screen bg-white dark:bg-slate-800 font-sans overflow-hidden transition-colors duration-300"
+  class="flex flex-col h-screen bg-gray-50 dark:bg-slate-900 font-sans overflow-hidden transition-colors duration-300"
 >
   <header
-    class="shrink-0 p-4 border-b border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 z-10"
+    class="shrink-0 px-6 py-4 border-b border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 z-10 shadow-sm"
   >
-    <div class="max-w-7xl mx-auto">
-      <div class="flex justify-between items-center mb-6">
-        <a
-          routerLink="/dashboard"
-          class="text-blue-600 dark:text-blue-400 hover:underline font-medium flex items-center gap-1 transition"
-        >
-          &larr; Back to Dashboard
-        </a>
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <a
+        routerLink="/dashboard"
+        class="text-blue-600 dark:text-blue-400 hover:underline font-medium flex items-center gap-1 transition"
+      >
+        &larr; Back to Dashboard
+      </a>
 
-        @if (isOwner()) {
-        <div class="flex gap-2">
-          <button
-            (click)="toggleEdit()"
-            class="px-3 py-1.5 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition text-sm font-medium"
-          >
-            {{ isEditing() ? 'Cancel' : '✏️ Edit Details' }}
-          </button>
-          @if (!isEditing()) {
-          <button
-            (click)="deleteProject()"
-            class="px-3 py-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition text-sm font-medium"
-          >
-            🗑️ Delete
-          </button>
-          }
-        </div>
+      @if (isOwner()) {
+      <div class="flex gap-2">
+        <button
+          (click)="toggleEdit()"
+          class="px-3 py-1.5 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition text-sm font-medium"
+        >
+          {{ isEditing() ? 'Cancel' : '✏️ Edit Details' }}
+        </button>
+        @if (!isEditing()) {
+        <button
+          (click)="deleteProject()"
+          class="px-3 py-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition text-sm font-medium"
+        >
+          🗑️ Delete
+        </button>
         }
       </div>
+      }
+    </div>
+  </header>
 
+  <main class="flex-1 overflow-y-auto w-full p-6 scrollbar-thin">
+    <div class="max-w-7xl mx-auto space-y-6">
       @if (project()) {
-      <div class="flex flex-col md:flex-row gap-8 items-start">
-        <div class="w-full md:w-64 shrink-0">
-          @if (project().imageUrl) {
-          <img
-            [src]="'http://localhost:3000' + project().imageUrl"
-            class="w-full h-40 object-cover rounded-xl shadow-md border border-gray-100 dark:border-slate-700"
-          />
-          } @else {
-          <div
-            class="w-full h-40 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-slate-700 dark:to-slate-600 rounded-xl flex items-center justify-center text-4xl"
-          >
-            📁
-          </div>
-          }
-          <div class="mt-4">
-            <div
-              class="flex justify-between text-xs font-bold text-gray-500 dark:text-gray-400 mb-1"
-            >
-              <span>Progress</span>
-              <span>{{ progress() }}%</span>
-            </div>
-            <div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2.5 overflow-hidden">
-              <div
-                class="bg-blue-600 h-2.5 rounded-full transition-all duration-500 ease-out"
-                [style.width.%]="progress()"
-              ></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex-1 w-full">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div
+          class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6"
+        >
           @if (!isEditing()) {
-          <div class="animate-fade-in">
-            <div class="flex items-center gap-3 mb-2">
-              <h1 class="text-4xl font-bold text-gray-900 dark:text-white">{{ project().name }}</h1>
-              <span
-                class="px-2 py-1 mt-2 text-xs font-bold rounded uppercase tracking-wide border"
-                [ngClass]="{
-                  'bg-green-100 text-green-700 border-green-200': project().status === 'active',
-                  'bg-blue-100 text-blue-700 border-blue-200': project().status === 'completed',
-                  'bg-gray-100 text-gray-600 border-gray-200': project().status === 'archived',
-                  'bg-red-100 text-red-700 border-red-200': project().status === 'abandoned'
-                }"
+          <div class="flex flex-col md:flex-row gap-6 items-start">
+            <div class="w-full md:w-56 shrink-0">
+              <div
+                class="h-32 rounded-lg overflow-hidden bg-gray-100 dark:bg-slate-700 mb-3 border border-gray-100 dark:border-slate-600 relative"
               >
-                {{ project().status }}
-              </span>
-              @if (daysLeft() !== null && project().status === 'active') {
-              <span
-                class="px-2 py-1 mt-2 text-xs font-bold rounded uppercase tracking-wide border"
-                [ngClass]="{
-                  'bg-red-100 text-red-700': daysLeft()! <= 3,
-                  'bg-yellow-100 text-yellow-700': daysLeft()! > 3 && daysLeft()! <= 7,
-                  'bg-gray-100 text-gray-600': daysLeft()! > 7
-                }"
+                @if (project().imageUrl) {
+                <img
+                  [src]="'http://localhost:3000' + project().imageUrl"
+                  class="w-full h-full object-cover"
+                />
+                } @else {
+                <div class="w-full h-full flex items-center justify-center text-3xl">📁</div>
+                }
+              </div>
+
+              <div
+                class="flex justify-between text-xs font-bold text-gray-500 dark:text-gray-400 mb-1"
               >
-                🕒 {{ daysLeft() }} Days Left
-              </span>
-              }
+                <span>Progress</span>
+                <span>{{ progress() }}%</span>
+              </div>
+              <div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+                <div
+                  class="bg-blue-600 h-2 rounded-full transition-all duration-500 ease-out"
+                  [style.width.%]="progress()"
+                ></div>
+              </div>
             </div>
-            <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6">
-              <span
-                >Created by
-                <span class="font-semibold text-gray-700 dark:text-gray-200">{{
-                  project().User?.username
-                }}</span></span
-              >
-              <span>•</span>
-              <span>{{ project().createdAt | date : 'mediumDate' }}</span>
+
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-2 flex-wrap">
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                  {{ project().name }}
+                </h1>
+                <span
+                  class="px-2 py-0.5 text-xs font-bold rounded uppercase tracking-wide border"
+                  [ngClass]="{
+                    'bg-green-100 text-green-700 border-green-200': project().status === 'active',
+                    'bg-blue-100 text-blue-700 border-blue-200': project().status === 'completed',
+                    'bg-gray-100 text-gray-600 border-gray-200': project().status === 'archived',
+                    'bg-red-100 text-red-700 border-red-200': project().status === 'abandoned'
+                  }"
+                >
+                  {{ project().status }}
+                </span>
+                @if (daysLeft() !== null && project().status === 'active') {
+                <span
+                  class="px-2 py-0.5 text-xs font-bold rounded uppercase tracking-wide border bg-gray-50 text-gray-600 dark:bg-slate-700 dark:text-gray-300"
+                >
+                  🕒 {{ daysLeft() }} Days Left
+                </span>
+                }
+              </div>
+
+              <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-4">
+                <span>Created {{ project().createdAt | date : 'mediumDate' }}</span>
+              </div>
+
+              <p class="text-gray-700 dark:text-gray-300 leading-relaxed text-sm">
+                {{ project().description }}
+              </p>
             </div>
-            <p class="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
-              {{ project().description }}
-            </p>
           </div>
           } @if (isEditing()) {
-          <form
-            [formGroup]="editForm"
-            class="animate-fade-in space-y-4 bg-gray-50 dark:bg-slate-900 p-6 rounded-xl border border-gray-200 dark:border-slate-700"
-          >
-            <div>
-              <label class="block text-xs font-bold text-gray-500 uppercase mb-1"
-                >Project Name</label
-              >
-              <input
-                type="text"
-                formControlName="name"
-                class="w-full text-xl font-bold p-2 rounded border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
-              />
+          <form [formGroup]="editForm" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1"
+                  >Project Name</label
+                >
+                <input
+                  type="text"
+                  formControlName="name"
+                  class="w-full p-2 rounded border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
+                <select
+                  formControlName="status"
+                  class="w-full p-2 rounded border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white outline-none"
+                >
+                  <option value="active">🟢 Active</option>
+                  <option value="completed">🔵 Completed</option>
+                  <option value="archived">📦 Archived</option>
+                  <option value="abandoned">🔴 Abandoned</option>
+                </select>
+              </div>
             </div>
-            <div>
-              <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
-              <select
-                formControlName="status"
-                class="w-full p-2 rounded border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white outline-none cursor-pointer"
-              >
-                <option value="active">🟢 Active</option>
-                <option value="completed">🔵 Completed</option>
-                <option value="archived">📦 Archived</option>
-                <option value="abandoned">🔴 Abandoned</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Deadline</label>
-              <input
-                type="date"
-                formControlName="deadline"
-                class="w-full p-2 rounded border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white outline-none"
-              />
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-gray-500 uppercase mb-1"
-                >Update Cover Image</label
-              >
-              <input
-                type="file"
-                (change)="onFileSelected($event)"
-                accept="image/*"
-                class="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition"
-              />
-            </div>
-
             <div>
               <label class="block text-xs font-bold text-gray-500 uppercase mb-1"
                 >Description</label
               >
               <textarea
                 formControlName="description"
-                rows="4"
-                class="w-full p-2 rounded border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                rows="3"
+                class="w-full p-2 rounded border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
               ></textarea>
             </div>
-
-            <div class="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                (click)="toggleEdit()"
-                class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 transition"
-              >
-                Cancel
-              </button>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Deadline</label>
+                <input
+                  type="date"
+                  formControlName="deadline"
+                  class="w-full p-2 rounded border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white outline-none"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1"
+                  >Cover Image</label
+                >
+                <input
+                  type="file"
+                  (change)="onFileSelected($event)"
+                  accept="image/*"
+                  class="w-full text-sm text-gray-500"
+                />
+              </div>
+            </div>
+            <div class="flex justify-end pt-2">
               <button
                 (click)="confirmUpdate()"
                 [disabled]="editForm.invalid"
-                class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded shadow transition disabled:opacity-50"
+                class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded shadow transition"
               >
                 Save Changes
               </button>
@@ -185,34 +173,119 @@
           </form>
           }
         </div>
-      </div>
-      }
-    </div>
-  </header>
 
-  <main class="flex-1 overflow-hidden w-full p-6">
-    <div class="max-w-7xl mx-auto h-full grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <section class="lg:col-span-2 h-full min-h-0">
         <div
-          class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 flex flex-col h-full"
+          class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6 flex flex-col"
         >
-          <div class="p-6 pb-4 shrink-0">
-            <div class="flex justify-between items-center mb-6">
-              <h3 class="text-xl font-bold text-gray-800 dark:text-gray-300">✅ Project Tasks</h3>
-              <div class="flex items-center gap-2">
-                <span class="text-sm text-gray-500 dark:text-gray-300"
-                  >{{ tasks().length }} items</span
-                >
-                <button
-                  (click)="generateAiTasks()"
-                  [disabled]="isAiLoading() || isReadOnly()"
-                  class="px-3 py-1 bg-purple-100 text-purple-700 rounded-md text-sm font-bold hover:bg-purple-200 transition flex items-center gap-2"
-                >
-                  <span>{{ isAiLoading() ? '🔮 Thinking...' : '✨ AI Auto-Plan' }}</span>
-                </button>
+          <h3
+            class="font-bold text-gray-800 dark:text-white mb-4 flex items-center justify-between"
+          >
+            <span>👥 Team</span>
+            <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full"
+              >{{ (project().Members?.length || 0) + 1 }} Members</span
+            >
+          </h3>
+
+          <div class="flex-1 overflow-y-auto space-y-3 max-h-60 pr-1 scrollbar-thin">
+            <div
+              class="flex items-center gap-3 p-2 rounded hover:bg-gray-50 dark:hover:bg-slate-700/50 transition"
+            >
+              <div
+                class="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center border border-yellow-200 overflow-hidden shrink-0"
+              >
+                <img
+                  *ngIf="project().Owner?.avatarUrl"
+                  [src]="'http://localhost:3000' + project().Owner.avatarUrl"
+                  class="w-full h-full object-cover"
+                />
+                <span *ngIf="!project().Owner?.avatarUrl">👑</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="font-bold text-sm truncate dark:text-white">
+                  {{ project().Owner?.username }}
+                </p>
+                <p class="text-[10px] uppercase font-bold text-yellow-600">Owner</p>
               </div>
             </div>
 
+            @for (member of project().Members; track member.id) {
+            <div
+              class="flex items-center gap-3 p-2 rounded hover:bg-gray-50 dark:hover:bg-slate-700/50 transition group"
+            >
+              <div
+                class="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center border border-indigo-100 overflow-hidden shrink-0"
+              >
+                <img
+                  *ngIf="member.avatarUrl"
+                  [src]="'http://localhost:3000' + member.avatarUrl"
+                  class="w-full h-full object-cover"
+                />
+                <span *ngIf="!member.avatarUrl" class="text-indigo-600 font-bold text-xs">{{
+                  member.username.charAt(0) | uppercase
+                }}</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="font-bold text-sm truncate dark:text-white">{{ member.username }}</p>
+                <p class="text-xs text-gray-400 truncate">{{ member.email }}</p>
+              </div>
+              @if (isOwner()) {
+              <button
+                (click)="kickMember(member.id)"
+                class="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition px-2"
+              >
+                ✕
+              </button>
+              }
+            </div>
+            }
+          </div>
+
+          @if (isOwner()) {
+          <div class="mt-4 pt-4 border-t border-gray-100 dark:border-slate-700">
+            <div class="flex gap-2">
+              <input
+                [formControl]="inviteEmail"
+                type="email"
+                placeholder="Email to invite..."
+                class="flex-1 min-w-0 rounded border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white px-3 py-1.5 text-xs focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+              <button
+                (click)="inviteMember()"
+                [disabled]="inviteEmail.invalid"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs font-bold transition disabled:opacity-50"
+              >
+                Invite
+              </button>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
+        <section
+          class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 flex flex-col overflow-hidden"
+        >
+          <div
+            class="p-4 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center bg-gray-50 dark:bg-slate-800/50"
+          >
+            <h3 class="font-bold text-gray-800 dark:text-white flex items-center gap-2">
+              ✅ Tasks
+              <span
+                class="bg-gray-200 dark:bg-slate-700 text-gray-600 dark:text-gray-300 text-xs px-2 py-0.5 rounded-full"
+                >{{ tasks().length }}</span
+              >
+            </h3>
+            <button
+              (click)="generateAiTasks()"
+              [disabled]="isAiLoading() || isReadOnly()"
+              class="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-bold hover:bg-purple-200 transition disabled:opacity-50"
+            >
+              {{ isAiLoading() ? '🔮 Thinking...' : '✨ AI Plan' }}
+            </button>
+          </div>
+
+          <div class="p-4 border-b border-gray-100 dark:border-slate-700">
             <div class="flex gap-2">
               <input
                 type="text"
@@ -220,183 +293,134 @@
                 (keyup.enter)="addTask()"
                 [disabled]="isReadOnly()"
                 placeholder="Add a new task..."
-                class="flex-1 rounded-lg border-gray-300 border px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none transition bg-gray-50 dark:bg-slate-800 dark:text-gray-300"
+                class="flex-1 rounded-lg border-gray-300 dark:border-slate-600 dark:bg-slate-900 dark:text-white px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition"
               />
               <button
                 (click)="addTask()"
                 [disabled]="isReadOnly()"
-                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition shadow-md"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold text-sm shadow transition disabled:opacity-50"
               >
-                + Add
+                +
               </button>
             </div>
           </div>
 
-          <div class="flex-1 overflow-y-auto min-h-0 px-6 pb-6 space-y-3 scrollbar-thin">
+          <div class="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-thin">
             @if (tasks().length === 0) {
-            <p class="text-center text-gray-400 py-8 dark:text-gray-300">
-              No tasks yet. Add one above!
-            </p>
+            <div class="flex flex-col items-center justify-center h-40 text-gray-400">
+              <span class="text-3xl mb-2">📝</span>
+              <p class="text-sm">No tasks yet.</p>
+            </div>
             } @if (isReadOnly()) {
             <div
-              class="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 p-4 rounded-r-lg"
+              class="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded text-xs text-center text-yellow-700 dark:text-yellow-200 mb-2"
             >
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path
-                      fill-rule="evenodd"
-                      d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                </div>
-                <div class="ml-3">
-                  <p class="text-sm text-yellow-700 dark:text-yellow-200">
-                    This project is <strong>{{ project().status }}</strong
-                    >. You cannot modify tasks or chat.
-                    <button
-                      (click)="toggleEdit()"
-                      class="underline font-bold hover:text-yellow-800 ml-1"
-                    >
-                      Edit Status
-                    </button>
-                    to restore.
-                  </p>
-                </div>
-              </div>
+              🔒 Project is {{ project().status }}. Read-only mode.
             </div>
-            }
+            } @for (task of tasks(); track task) {
             <div
-              *ngFor="let task of tasks()"
-              class="flex items-center gap-4 p-4 rounded-lg border border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition group bg-white dark:bg-slate-800"
+              class="flex items-center gap-3 p-3 rounded-lg border border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition group bg-white dark:bg-slate-800"
             >
               <div
                 (click)="!isReadOnly() && toggleTask(task)"
-                class="w-6 h-6 rounded border-2 flex items-center justify-center transition-colors duration-200"
-                [class.cursor-pointer]="!isReadOnly()"
-                [class.cursor-not-allowed]="isReadOnly()"
-                [class.opacity-50]="isReadOnly()"
-                [class.bg-green-500]="task.isCompleted"
-                [class.bg-green-500]="task.isCompleted"
-                [class.border-green-500]="task.isCompleted"
-                [class.border-gray-300]="!task.isCompleted"
+                class="w-5 h-5 rounded border flex items-center justify-center cursor-pointer transition-colors"
+                [ngClass]="
+                  task.isCompleted
+                    ? 'bg-green-500 border-green-500'
+                    : 'border-gray-300 dark:border-slate-500'
+                "
               >
-                <span *ngIf="task.isCompleted" class="text-white text-sm font-bold">✓</span>
+                <span *ngIf="task.isCompleted" class="text-white text-xs font-bold">✓</span>
               </div>
               <span
-                class="text-gray-700 flex-1 text-lg dark:text-gray-300"
+                class="flex-1 text-sm dark:text-gray-200"
                 [class.line-through]="task.isCompleted"
                 [class.text-gray-400]="task.isCompleted"
                 >{{ task.description }}</span
               >
               <button
                 [disabled]="isReadOnly()"
-                (click)="deleteTask(task); $event.stopPropagation()"
-                class="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
+                (click)="deleteTask(task)"
+                class="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition px-2"
               >
                 ✕
               </button>
             </div>
+            }
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section class="h-full min-h-0">
-        <div
-          class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 flex flex-col h-full"
+        <section
+          class="lg:col-span-1 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 flex flex-col overflow-hidden"
         >
           <div
-            class="p-4 border-b border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 rounded-t-xl shrink-0"
+            class="p-4 border-b border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50"
           >
-            <h3 class="font-bold text-gray-800 dark:text-white">💬 Team Chat</h3>
-            <p class="text-xs text-gray-500 dark:text-gray-400">Live discussion</p>
+            <h3 class="font-bold text-gray-800 dark:text-white">💬 Chat</h3>
           </div>
 
           <div
             #scrollContainer
-            class="flex-1 overflow-y-auto min-h-0 p-4 space-y-4 bg-gray-50 dark:bg-slate-900 scrollbar-thin"
+            class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-slate-900 scrollbar-thin"
           >
             @if (messages().length === 0) {
-            <p class="text-center text-gray-400 text-sm mt-10">No messages yet.</p>
-            }
-            <div
-              *ngFor="let msg of messages()"
-              class="flex gap-3 mb-4"
-              [class.flex-row-reverse]="msg.userId === myId"
-            >
+            <p class="text-center text-gray-400 text-xs mt-10">Start the conversation!</p>
+            } @for (msg of messages(); track msg) {
+            <div class="flex gap-2" [class.flex-row-reverse]="msg.userId === myId">
               <div
-                class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden border border-white dark:border-slate-600 shadow-sm"
+                class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-bold shrink-0 overflow-hidden border border-white dark:border-slate-600 shadow-sm"
               >
                 <img
                   *ngIf="msg.User?.avatarUrl"
                   [src]="'http://localhost:3000' + msg.User.avatarUrl"
-                  class="w-full h-full rounded-full object-cover"
+                  class="w-full h-full object-cover"
                 />
                 <span *ngIf="!msg.User?.avatarUrl" class="text-blue-600">{{
                   msg.User?.username?.charAt(0) | uppercase
                 }}</span>
               </div>
-
-              <div class="max-w-[85%] flex flex-col" [class.items-end]="msg.userId === myId">
+              <div class="max-w-[85%]">
                 <div
-                  class="px-4 py-2 shadow-sm break-words"
+                  class="px-3 py-2 shadow-sm break-words text-sm"
                   [ngClass]="
                     msg.userId === myId
                       ? 'bg-blue-600 text-white rounded-2xl rounded-tr-sm'
-                      : 'bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-white rounded-2xl rounded-tl-sm'
+                      : 'bg-white dark:bg-slate-700 text-gray-800 dark:text-white rounded-2xl rounded-tl-sm'
                   "
                 >
                   <p
                     *ngIf="msg.userId !== myId"
-                    class="text-[10px] font-bold opacity-50 mb-0.5 uppercase tracking-wide"
+                    class="text-[9px] font-bold opacity-50 mb-0.5 uppercase"
                   >
                     {{ msg.User?.username }}
                   </p>
-
-                  <p class="text-sm leading-relaxed">{{ msg.content }}</p>
+                  <p>{{ msg.content }}</p>
                 </div>
-
-                <span class="text-[10px] text-gray-400 mt-1 px-1">
+                <p class="text-[9px] text-gray-400 mt-1 px-1 text-right">
                   {{ msg.createdAt | date : 'shortTime' }}
-                </span>
+                </p>
               </div>
             </div>
+            }
           </div>
 
           <div
-            class="p-3 border-t border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 shrink-0 rounded-b-xl"
+            class="p-3 border-t border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800"
           >
             @if (isReadOnly()) {
-            <div
-              class="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700/50 rounded-lg p-3 text-center"
+            <p
+              class="text-xs text-center text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded"
             >
-              <p
-                class="text-sm text-yellow-700 dark:text-yellow-200 flex items-center justify-center gap-2"
-              >
-                <span
-                  >🔒 Project is <strong>{{ project().status }}</strong
-                  >. Chat disabled.</span
-                >
-
-                @if (isOwner()) {
-                <button
-                  (click)="toggleEdit()"
-                  class="underline font-bold hover:text-yellow-800 transition text-xs"
-                >
-                  Restore
-                </button>
-                }
-              </p>
-            </div>
+              Chat disabled ({{ project().status }})
+            </p>
             } @else {
             <div class="flex gap-2">
               <input
                 type="text"
                 [(ngModel)]="newMessage"
                 (keyup.enter)="sendMessage()"
-                placeholder="Type a message..."
-                class="flex-1 rounded-lg border-gray-300 dark:border-slate-600 border px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none dark:bg-slate-700 dark:text-white"
+                placeholder="Message..."
+                class="flex-1 rounded-lg border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
               />
               <button
                 (click)="sendMessage()"
@@ -407,8 +431,9 @@
             </div>
             }
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
+      }
     </div>
   </main>
 </div>

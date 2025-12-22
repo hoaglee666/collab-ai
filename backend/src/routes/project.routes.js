@@ -7,6 +7,8 @@ import {
   getMyProjects,
   deleteProject,
   updateProject,
+  addMember,
+  removeMember,
 } from "../controllers/project.controller.js";
 import { verifyToken } from "../middleware/auth.middleware.js"; // <--- Secure it!
 import multer from "multer";
@@ -25,5 +27,7 @@ router.get("/my", verifyToken, getMyProjects);
 router.get("/:id", verifyToken, getProjectById);
 router.put("/:id", verifyToken, upload.single("image"), updateProject);
 router.delete("/:id", verifyToken, deleteProject);
+router.post("/:id/members", verifyToken, addMember); // Add by email
+router.delete("/:id/members/:userId", verifyToken, removeMember); // Kick by ID
 
 export default router;
