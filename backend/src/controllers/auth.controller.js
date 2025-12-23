@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import User from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import Project from "../models/project.model.js";
+import { resolveMx } from "dns/promises";
 
 export const register = async (req, res) => {
   try {
@@ -10,6 +11,31 @@ export const register = async (req, res) => {
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ message: "Email already exists" });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: "Invalid email format." });
+    }
+    const domain = email.split("@")[1].toLowerCase();
+    const blockedDomains = ["gamil.com", "hotmal.com", "yhoo.com"];
+    if (blockedDomains.includes(domain)) {
+      return res
+        .status(400)
+        .json({ message: "Invalid domain. Please check for typos." });
+    }
+    try {
+      // This asks the internet: "Does this domain have email servers?"
+      const mxRecords = await resolveMx(domain);
+
+      if (!mxRecords || mxRecords.length === 0) {
+        throw new Error("No mail server");
+      }
+    } catch (error) {
+      // If DNS fails (domain doesn't exist) or has no mail servers
+      return res.status(400).json({
+        message: "This domain does not exist or cannot receive emails.",
+      });
     }
     //create new
     const user = await User.create({ username, email, password });
