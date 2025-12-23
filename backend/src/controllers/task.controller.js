@@ -1,11 +1,12 @@
 // backend/src/controllers/task.controller.js
 import Project from "../models/project.model.js";
 import Task from "../models/task.model.js";
+import User from "../models/user.model.js";
 
 // 1. Create a Task manually
 export const createTask = async (req, res) => {
   try {
-    const { projectId, description } = req.body;
+    const { projectId, description, assigneeId } = req.body;
     const project = await Project.findByPk(projectId);
     if (project.status !== "active") {
       return res.status(403).json({
@@ -16,11 +17,20 @@ export const createTask = async (req, res) => {
     const task = await Task.create({
       projectId,
       description,
+      assigneeId: assigneeId || null, //save
+    });
+
+    const taskWithAssignee = await Task.findByPk(task.id, {
+      include: {
+        model: User,
+        as: "Assignee",
+        attributes: ["username", "avatarUrl"],
+      },
     });
     //emit
     req.io.to(projectId).emit("task:created", task);
 
-    res.status(201).json(task);
+    res.status(201).json(taskWithAssignee);
   } catch (error) {
     res
       .status(500)
@@ -47,6 +57,45 @@ export const toggleTask = async (req, res) => {
     res
       .status(500)
       .json({ message: "Error updating task", error: error.message });
+  }
+};
+
+export const updateTask = async (req, res) => {
+  // Rename toggleTask to updateTask for clarity
+  try {
+    const { id } = req.params;
+    const { isCompleted, description, assigneeId } = req.body;
+
+    const task = await Task.findByPk(id);
+    if (!task) return res.status(404).json({ message: "Task not found" });
+
+    // ✅ Only update if value is provided
+    if (description !== undefined) task.description = description;
+    if (assigneeId !== undefined) task.assigneeId = assigneeId;
+
+    // ✅ Logic fix: If isCompleted is sent, use it. Otherwise, toggle it.
+    if (isCompleted !== undefined) {
+      task.isCompleted = isCompleted;
+    } else {
+      // Only toggle if isCompleted was NOT sent in body (legacy toggle behavior)
+      // or you can remove this toggle logic if the frontend always sends true/false
+      // task.isCompleted = !task.isCompleted;
+    }
+
+    await task.save();
+
+    await task.reload({
+      include: {
+        model: User,
+        as: "Assignee",
+        attributes: ["username", "avatarUrl"],
+      },
+    });
+
+    req.io.to(task.projectId).emit("task:updated", task);
+    res.json(task);
+  } catch (error) {
+    // ...
   }
 };
 
@@ -80,6 +129,11 @@ export const getTasks = async (req, res) => {
     const tasks = await Task.findAll({
       where: { projectId },
       order: [["createdAt", "ASC"]],
+      include: {
+        model: User,
+        as: "Assignee",
+        attributes: ["id", "username", "avatarUrl"],
+      },
     });
 
     res.json(tasks);

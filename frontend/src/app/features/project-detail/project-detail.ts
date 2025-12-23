@@ -62,9 +62,21 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     // Am I Owner OR in Members list?
     return p.userId === u.id || p.Members.some((m: any) => m.id === u.id);
   });
+  allMembers = computed(() => {
+    const p = this.project();
+    if (!p) return [];
+
+    const members = p.Members || [];
+    // If Owner exists, add them to the start of the list
+    if (p.Owner) {
+      return [p.Owner, ...members];
+    }
+    return members;
+  });
   isEditing = signal(false); //toggle
   myId = '';
   messages = signal<any[]>([]);
+  selectedAssigneeId = signal<string>('');
   newMessage = '';
   editForm!: FormGroup;
   inviteEmail = new FormControl('', [Validators.required, Validators.email]);
@@ -219,13 +231,33 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
   addTask() {
     if (!this.newTaskDescription.trim() || !this.project()) return;
 
-    this.projectService.createTask(this.project().id, this.newTaskDescription).subscribe({
+    const taskData = {
+      description: this.newTaskDescription,
+      // ✅ FIX 1: Add parenthesis () to read the signal value
+      assigneeId: this.selectedAssigneeId() || null,
+    };
+
+    // ✅ FIX 2: Send 'taskData' object, NOT 'this.newTaskDescription'
+    this.projectService.createTask(this.project().id, taskData).subscribe({
       next: (newTask) => {
-        // Add to list immediately
         this.tasks.update((list) => [...list, newTask]);
-        this.newTaskDescription = ''; // Clear input
+        this.newTaskDescription = '';
+        this.selectedAssigneeId.set('');
       },
       error: (err) => alert('Failed to add task'),
+    });
+  }
+
+  assignTask(task: any, event: Event) {
+    const selectElement = event.target as HTMLSelectElement;
+    const newAssigneeId = selectElement.value;
+
+    this.projectService.updateTask(task.id, { assigneeId: newAssigneeId }).subscribe({
+      next: (updatedTask) => {
+        // Update the specific task in the list
+        this.tasks.update((tasks) => tasks.map((t) => (t.id === task.id ? updatedTask : t)));
+      },
+      error: (err) => alert('Failed to assign task'),
     });
   }
 

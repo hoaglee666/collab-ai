@@ -82,12 +82,19 @@ export class ProjectService {
     return this.http.get<any[]>(`http://localhost:3000/api/tasks/${projectId}`, this.getHeaders());
   }
   //add task
-  createTask(projectId: string, description: string): Observable<any> {
-    return this.http.post<any>(
-      `http://localhost:3000/api/tasks`,
-      { projectId, description },
-      this.getHeaders()
-    );
+  createTask(projectId: string, taskData: string | any): Observable<any> {
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+
+    // Handle string vs object input
+    const payload = typeof taskData === 'string' ? { description: taskData } : taskData;
+
+    // ✅ FIX: Add projectId to the payload body
+    const finalPayload = { ...payload, projectId };
+
+    // ✅ FIX: Post to the Task API, not the Project API
+    // Was: this.http.post(`${this.apiUrl}/${projectId}/tasks`, ... )
+    return this.http.post(`http://localhost:3000/api/tasks`, finalPayload, { headers });
   }
   //check uncheck
   toggleTask(taskId: string): Observable<any> {
@@ -137,5 +144,14 @@ export class ProjectService {
     const token = this.authService.getToken();
     const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
     return this.http.post(`${this.apiUrl}/${projectId}/join`, {}, { headers });
+  }
+
+  updateTask(taskId: string, updates: any): Observable<any> {
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+
+    // Assuming your backend route is PUT /api/tasks/:id
+    // If your route is nested like /projects/:id/tasks/:taskId, let me know!
+    return this.http.put(`http://localhost:3000/api/tasks/${taskId}`, updates, { headers });
   }
 }
