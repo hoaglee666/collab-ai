@@ -5,7 +5,7 @@ import { Op } from "sequelize";
 // create project
 export const createProject = async (req, res) => {
   try {
-    const { name, description, deadline } = req.body;
+    const { name, description, deadline, visibility } = req.body;
     const userId = req.user.id;
 
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
@@ -15,6 +15,7 @@ export const createProject = async (req, res) => {
       userId,
       imageUrl,
       deadline,
+      visibility: visibility || "public",
     });
 
     // 🔄 RELOAD WITH CORRECT ALIAS
@@ -155,7 +156,7 @@ export const updateProject = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
-    const { name, description, status, deadline } = req.body;
+    const { name, description, status, deadline, visibility } = req.body;
 
     const project = await Project.findOne({ where: { id, userId } });
 
@@ -172,6 +173,7 @@ export const updateProject = async (req, res) => {
     if (req.file) {
       project.imageUrl = `/uploads/${req.file.filename}`;
     }
+    if (visibility) project.visibility = visibility;
 
     await project.save();
     res.json({ message: "Project updated", project });
@@ -254,5 +256,40 @@ export const removeMember = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Failed to remove member" });
+  }
+};
+
+export const joinProject = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const project = await Project.findByPk(id);
+    if (!project) return res.status(404).json({ message: "Project not found" });
+
+    // 1. Check if already in team
+    const isOwner = project.userId === userId;
+    const isMember = await project.hasMember(userId);
+
+    if (isOwner || isMember) {
+      return res
+        .status(400)
+        .json({ message: "You are already in this project." });
+    }
+
+    // 2. Check Visibility
+    if (project.visibility === "private") {
+      return res
+        .status(403)
+        .json({ message: "This project is Private. You must be invited." });
+    }
+
+    // 3. Join!
+    const user = await User.findByPk(userId);
+    await project.addMember(user);
+
+    res.json({ message: "Joined successfully!", project });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to join project" });
   }
 };

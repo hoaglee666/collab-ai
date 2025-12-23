@@ -36,7 +36,7 @@ export const login = async (req, res) => {
     if (!user.password) {
       return res.status(400).json({
         message:
-          "This account uses Google/GitHub login. Please use the buttons above.",
+          "This account uses Google/GitHub login. Please use the buttons below.",
       });
     }
     // ----------------------------------------

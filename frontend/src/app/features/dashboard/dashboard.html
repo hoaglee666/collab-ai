@@ -25,6 +25,31 @@
                 placeholder="e.g. Super App"
               />
             </div>
+            <div class="mt-4">
+              <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 pb-2"
+                >Visibility</label
+              >
+              <div class="flex gap-4">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    formControlName="visibility"
+                    value="public"
+                    class="w-4 h-4 text-blue-600"
+                  />
+                  <span class="text-sm dark:text-white">🌍 Public (Anyone can join)</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    formControlName="visibility"
+                    value="private"
+                    class="w-4 h-4 text-red-600"
+                  />
+                  <span class="text-sm dark:text-white">🔒 Private (Invite only)</span>
+                </label>
+              </div>
+            </div>
             <div class="w-40">
               <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 pb-3"
                 >Deadline</label
@@ -117,12 +142,12 @@
         </button>
       </div>
       <h3 class="text-lg font-bold text-gray-700 dark:text-white mb-4">Your Projects</h3>
-      <div class="bg-red-100 p-4 mb-4 rounded text-xs font-mono text-red-800">
+      <!-- <div class="bg-red-100 p-4 mb-4 rounded text-xs font-mono text-red-800">
         <p><strong>Raw Projects Count:</strong> {{ projects().length }}</p>
         <p><strong>Current Filter Tab:</strong> "{{ filterStatus() }}"</p>
         <p><strong>Filtered Count:</strong> {{ filteredProjects().length }}</p>
         <pre>{{ projects() | json }}</pre>
-      </div>
+      </div> -->
       @if (projects().length === 0) {
       <div
         class="text-center py-12 bg-gray-50 dark:bg-slate-800 rounded-lg border-2 border-dashed border-gray-200 dark:border-slate-700"
@@ -177,17 +202,17 @@
               <div
                 class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold overflow-hidden border border-gray-200 dark:border-slate-600"
               >
-                @if (project.User?.avatarUrl) {
+                @if (project.Owner?.avatarUrl) {
                 <img
-                  [src]="'http://localhost:3000' + project.User.avatarUrl"
+                  [src]="'http://localhost:3000' + project.Owner.avatarUrl"
                   class="w-full h-full object-cover"
                 />
                 } @else {
-                <span>{{ project.User?.username?.charAt(0) || '?' }}</span>
+                <span>{{ project.Owner?.username?.charAt(0) || '?' }}</span>
                 }
               </div>
               <span class="text-xs text-gray-500 dark:text-gray-400"
-                >by {{ project.User?.username }}</span
+                >by {{ project.Owner?.username }}</span
               >
             </div>
 

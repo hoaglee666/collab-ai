@@ -54,12 +54,37 @@ export const toggleTask = async (req, res) => {
 export const getTasks = async (req, res) => {
   try {
     const { projectId } = req.params;
+    const userId = req.user.id; // 1. Get current user ID
+
+    // 2. Fetch Project FIRST to check permissions
+    const project = await Project.findByPk(projectId);
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    // 3. Calculate Permissions
+    const isOwner = project.userId === userId;
+
+    // Sequelize provides 'hasMember' automatically because of your associations!
+    const isMember = await project.hasMember(userId);
+
+    // 4. Security Check
+    if (project.visibility === "private" && !isOwner && !isMember) {
+      return res
+        .status(403)
+        .json({ message: "Cannot view tasks of private project" });
+    }
+
+    // 5. Fetch Tasks (Only if allowed)
     const tasks = await Task.findAll({
       where: { projectId },
       order: [["createdAt", "ASC"]],
     });
+
     res.json(tasks);
   } catch (error) {
+    console.error("Error fetching tasks:", error);
     res.status(500).json({ message: "Error fetching tasks" });
   }
 };

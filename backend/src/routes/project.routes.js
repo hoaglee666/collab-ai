@@ -9,6 +9,7 @@ import {
   updateProject,
   addMember,
   removeMember,
+  joinProject,
 } from "../controllers/project.controller.js";
 import { verifyToken } from "../middleware/auth.middleware.js"; // <--- Secure it!
 import multer from "multer";
@@ -29,5 +30,6 @@ router.put("/:id", verifyToken, upload.single("image"), updateProject);
 router.delete("/:id", verifyToken, deleteProject);
 router.post("/:id/members", verifyToken, addMember); // Add by email
 router.delete("/:id/members/:userId", verifyToken, removeMember); // Kick by ID
+router.post("/:id/join", verifyToken, joinProject);
 
 export default router;

@@ -130,6 +130,52 @@
                 </select>
               </div>
             </div>
+            <div class="mt-2">
+              <label class="block text-xs font-bold text-gray-500 uppercase mb-2"
+                >Project Visibility</label
+              >
+              <div
+                class="flex gap-6 p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg border border-gray-200 dark:border-slate-600"
+              >
+                <label class="flex items-center gap-2 cursor-pointer group">
+                  <div class="relative flex items-center">
+                    <input
+                      type="radio"
+                      formControlName="visibility"
+                      value="public"
+                      class="peer sr-only"
+                    />
+                    <div
+                      class="w-4 h-4 border-2 border-gray-400 rounded-full peer-checked:border-blue-600 peer-checked:bg-blue-600 transition"
+                    ></div>
+                  </div>
+                  <span
+                    class="text-sm font-medium text-gray-700 dark:text-gray-200 group-hover:text-blue-600 transition"
+                  >
+                    🌍 Public
+                  </span>
+                </label>
+
+                <label class="flex items-center gap-2 cursor-pointer group">
+                  <div class="relative flex items-center">
+                    <input
+                      type="radio"
+                      formControlName="visibility"
+                      value="private"
+                      class="peer sr-only"
+                    />
+                    <div
+                      class="w-4 h-4 border-2 border-gray-400 rounded-full peer-checked:border-red-600 peer-checked:bg-red-600 transition"
+                    ></div>
+                  </div>
+                  <span
+                    class="text-sm font-medium text-gray-700 dark:text-gray-200 group-hover:text-red-600 transition"
+                  >
+                    🔒 Private
+                  </span>
+                </label>
+              </div>
+            </div>
             <div>
               <label class="block text-xs font-bold text-gray-500 uppercase mb-1"
                 >Description</label
@@ -261,7 +307,7 @@
           }
         </div>
       </div>
-
+      @if (isMember()) {
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
         <section
           class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 flex flex-col overflow-hidden"
@@ -433,7 +479,34 @@
           </div>
         </section>
       </div>
-      }
+      } @else {
+      <div
+        class="text-center py-20 bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm mt-6"
+      >
+        <div class="text-5xl mb-4">🔐</div>
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">Join to Contribute</h2>
+        <p class="text-gray-500 mb-6 max-w-md mx-auto">
+          This project is <strong>{{ project().visibility }}</strong
+          >. You need to be a member to view tasks, chat, and files.
+        </p>
+
+        @if (project().visibility === 'public') {
+        <button
+          (click)="joinProject()"
+          class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105"
+        >
+          Join Project Now
+        </button>
+        } @else {
+        <button
+          disabled
+          class="bg-gray-300 dark:bg-slate-600 text-gray-500 dark:text-gray-400 px-8 py-3 rounded-full font-bold cursor-not-allowed"
+        >
+          Invite Only 🚫
+        </button>
+        }
+      </div>
+      } }
     </div>
   </main>
 </div>

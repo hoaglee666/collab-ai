@@ -132,4 +132,10 @@ export class ProjectService {
     const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
     return this.http.delete(`${this.apiUrl}/${projectId}/members/${userId}`, { headers });
   }
+
+  joinProject(projectId: string): Observable<any> {
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+    return this.http.post(`${this.apiUrl}/${projectId}/join`, {}, { headers });
+  }
 }

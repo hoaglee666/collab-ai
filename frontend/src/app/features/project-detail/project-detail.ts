@@ -55,6 +55,13 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     const u = this.currentUser();
     return p && u && p.userId === u.id;
   });
+  isMember = computed(() => {
+    const p = this.project();
+    const u = this.currentUser();
+    if (!p || !u) return false;
+    // Am I Owner OR in Members list?
+    return p.userId === u.id || p.Members.some((m: any) => m.id === u.id);
+  });
   isEditing = signal(false); //toggle
   myId = '';
   messages = signal<any[]>([]);
@@ -144,6 +151,9 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
       this.editForm = this.fb.group({
         name: ['', Validators.required],
         description: [''],
+        status: [''],
+        deadline: [''],
+        visibility: ['public'],
       });
     }
   }
@@ -319,11 +329,26 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     });
   }
 
+  joinProject() {
+    this.isLoading.set(true);
+    this.projectService.joinProject(this.project().id).subscribe({
+      next: () => {
+        alert('Welcome to the team!');
+        this.loadProject(this.project().id); // Refresh to see chat/tasks
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        alert(err.error?.message || 'Failed to join');
+        this.isLoading.set(false);
+      },
+    });
+  }
+
   // Revised Save Method (We will call this from HTML with new values)
   confirmUpdate() {
     if (this.editForm.invalid) return;
 
-    const { name, description, deadline, status } = this.editForm.value;
+    const { name, description, deadline, status, visibility } = this.editForm.value;
     const formData = new FormData();
     formData.append('name', name);
     formData.append('description', description);
@@ -333,6 +358,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
       formData.append('image', this.selectedFile);
     }
     formData.append('status', status);
+    formData.append('visibility', visibility);
 
     this.projectService.updateProject(this.project().id, formData).subscribe({
       next: (res) => {
@@ -368,8 +394,9 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
       this.editForm = this.fb.group({
         name: [this.project().name, Validators.required],
         description: [this.project().description],
-        deadline: [this.project().deadline], // <--- Pre-fill date
+        deadline: [this.project().deadline], // load current data
         status: [this.project().status],
+        visibility: [this.project().visibility],
       });
     } else {
       // If cancelling, reset file selection

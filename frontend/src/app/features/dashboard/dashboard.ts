@@ -43,6 +43,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     name: ['', Validators.required],
     description: [''],
     deadline: [''],
+    visibility: ['public'],
   });
 
   // computed list shown in html
@@ -122,6 +123,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const formData = new FormData();
     formData.append('name', this.projectForm.get('name')?.value || '');
     formData.append('description', this.projectForm.get('description')?.value || '');
+    formData.append('visibility', this.projectForm.get('visibility')?.value || 'public');
 
     const deadline = this.projectForm.get('deadline')?.value;
     if (deadline) {

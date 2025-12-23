@@ -33,7 +33,6 @@ services:
       DB_NAME: collab_ai_db
       DB_DIALECT: postgres
       JWT_SECRET: super_secret_secure_key_2025
-      GEMINI_API_KEY: ${GEMINI_API_KEY} # Reads from your local computer
     depends_on:
       - postgres
 

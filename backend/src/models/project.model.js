@@ -34,6 +34,11 @@ const Project = sequelize.define("Project", {
     type: DataTypes.UUID,
     allowNull: false,
   },
+  visibility: {
+    type: DataTypes.ENUM("public", "private"),
+    defaultValue: "public",
+    allowNull: false,
+  },
 });
 
 // 1. The Owner Relationship (Existing)
